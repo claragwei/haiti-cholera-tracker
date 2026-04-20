@@ -374,13 +374,13 @@ h1 em { font-style: italic; color: var(--dim); font-weight: 300; }
       <div class="sb-kicker">Feb 2022 — Present</div>
       <h1>The War<br/>Comes <em>Home.</em></h1>
       <p class="sb-narrative">
-        Russia's assault began on military targets — airfields, command centers,
-        supply depots. By October 2022, the campaign shifted: power stations were
-        struck through winter, residential buildings hit across the country,
-        hospitals and schools deliberately targeted. The Kyiv School of Economics
-        documents over $170 billion in infrastructure damage. This map records
-        38,564 incidents from ACLED's conflict database. Drag the slider to watch
-        the pattern change.
+        Since February 2022, Russia has launched over 38,000 recorded strikes
+        across Ukraine. What began as a military campaign — targeting airfields,
+        bases, and supply lines — shifted into a systematic assault on civilian
+        life. Over 3.6 million people remain internally displaced. By mapping
+        where strikes concentrate and where displaced populations gather, we can
+        identify protection priorities and evacuation corridors that save lives.
+        Data: ACLED, IOM DTM Round 20, KSE Institute.
       </p>
     </div>
 
@@ -403,11 +403,19 @@ h1 em { font-style: italic; color: var(--dim); font-weight: 300; }
         </div>
       </div>
 
-      <div class="layer-row" onclick="toggleLayer('resilience')">
-        <div class="layer-box" id="box-resilience"></div>
+      <div class="layer-row" onclick="toggleLayer('idps')">
+        <div class="layer-box" id="box-idps"></div>
         <div>
-          <div class="layer-name">Energy infrastructure</div>
-          <div class="layer-desc">Major plants (centralized, vulnerable) vs. proposed distributed zones.</div>
+          <div class="layer-name">Displacement (IDPs)</div>
+          <div class="layer-desc">Internally displaced persons per oblast. Replaces strike density when on.</div>
+        </div>
+      </div>
+
+      <div class="layer-row" onclick="toggleLayer('sites')">
+        <div class="layer-box" id="box-sites"></div>
+        <div>
+          <div class="layer-name">Military sites &amp; border crossings</div>
+          <div class="layer-desc">Air bases targeted on day one and active border crossings.</div>
         </div>
       </div>
 
@@ -423,6 +431,7 @@ h1 em { font-style: italic; color: var(--dim); font-weight: 300; }
     <div class="sb-footer">
       <div class="sb-footer-text">
         ACLED — Armed Conflict Location &amp; Event Data Project<br/>
+        IOM DTM — Displacement Tracking Matrix, Round 20<br/>
         KSE Institute — Kyiv School of Economics, 2024<br/>
         Boundaries — Natural Earth Admin 1
       </div>
@@ -459,6 +468,8 @@ h1 em { font-style: italic; color: var(--dim); font-weight: 300; }
 const START_DATE = "2022-02-24";
 const START_MS   = new Date(START_DATE).getTime();
 
+function fmtNum(n) { return n != null ? (+n).toLocaleString() : "—"; }
+
 const CAT = {
   1: { label: "Energy / infrastructure", color: "#e8a33d" },
   2: { label: "Residential",             color: "#c94444" },
@@ -485,67 +496,6 @@ function fmtDate(iso) {
   return `${MO[+m - 1]} ${+d}, ${y}`;
 }
 
-// ══════════════════════════════════════════════════════════════════
-//  SOLUTION LAYER — HARDCODED DATA
-// ══════════════════════════════════════════════════════════════════
-
-// Major Ukrainian power plants — approximate coordinates
-const PLANTS_GEOJSON = {
-  type: "FeatureCollection",
-  features: [
-    // Nuclear
-    { type:"Feature", geometry:{type:"Point",coordinates:[34.582,47.507]},
-      properties:{name:"Zaporizhzhia NPP",  kind:"nuclear", note:"Russian-occupied since March 2022"}},
-    { type:"Feature", geometry:{type:"Point",coordinates:[26.649,50.302]},
-      properties:{name:"Khmelnytskyi NPP",  kind:"nuclear", note:""}},
-    { type:"Feature", geometry:{type:"Point",coordinates:[25.890,51.327]},
-      properties:{name:"Rivne NPP",         kind:"nuclear", note:""}},
-    { type:"Feature", geometry:{type:"Point",coordinates:[31.213,47.836]},
-      properties:{name:"South Ukraine NPP", kind:"nuclear", note:""}},
-    // Thermal
-    { type:"Feature", geometry:{type:"Point",coordinates:[24.628,49.258]},
-      properties:{name:"Burshtyn TPP",      kind:"thermal", note:""}},
-    { type:"Feature", geometry:{type:"Point",coordinates:[30.786,50.039]},
-      properties:{name:"Trypilska TPP",     kind:"thermal", note:"Destroyed April 2024"}},
-    { type:"Feature", geometry:{type:"Point",coordinates:[29.215,48.682]},
-      properties:{name:"Ladyzhyn TPP",      kind:"thermal", note:""}},
-    { type:"Feature", geometry:{type:"Point",coordinates:[35.024,48.402]},
-      properties:{name:"Prydniprovska TPP", kind:"thermal", note:"Heavily damaged"}},
-    { type:"Feature", geometry:{type:"Point",coordinates:[33.377,47.973]},
-      properties:{name:"Kryvorizka TPP",    kind:"thermal", note:""}},
-    { type:"Feature", geometry:{type:"Point",coordinates:[24.367,50.194]},
-      properties:{name:"Dobrotvirska TPP",  kind:"thermal", note:""}},
-    { type:"Feature", geometry:{type:"Point",coordinates:[36.347,49.617]},
-      properties:{name:"Zmiivska TPP",      kind:"thermal", note:"Damaged 2022"}},
-    { type:"Feature", geometry:{type:"Point",coordinates:[38.277,48.524]},
-      properties:{name:"Vuhlehirska TPP",   kind:"thermal", note:"Russian-occupied territory"}},
-    { type:"Feature", geometry:{type:"Point",coordinates:[37.589,48.864]},
-      properties:{name:"Slovianska TPP",    kind:"thermal", note:"Russian-occupied territory"}},
-    // Hydro
-    { type:"Feature", geometry:{type:"Point",coordinates:[35.085,47.854]},
-      properties:{name:"Dnipro HPP",        kind:"hydro",   note:"Damaged 2023"}},
-    { type:"Feature", geometry:{type:"Point",coordinates:[34.665,47.637]},
-      properties:{name:"Kakhovka HPP",      kind:"hydro",   note:"Dam destroyed June 2023"}},
-  ]
-};
-
-// Illustrative distributed energy zones
-// These are simplified polygons showing regions where distributed infrastructure
-// (rooftop solar, small-scale gas, microgrids) could reduce centralized vulnerability.
-const MICRO_GEOJSON = {
-  type: "FeatureCollection",
-  features: [
-    { type:"Feature",
-      geometry:{type:"Polygon",coordinates:[[[22.2,49.0],[26.8,49.0],[26.8,51.7],[22.2,51.7],[22.2,49.0]]]},
-      properties:{name:"Western distributed zone (Lviv, Ivano-Frankivsk, Ternopil)"}},
-    { type:"Feature",
-      geometry:{type:"Polygon",coordinates:[[[27.2,48.4],[31.2,48.4],[31.2,51.0],[27.2,51.0],[27.2,48.4]]]},
-      properties:{name:"Central distributed zone (Vinnytsia, Khmelnytskyi, Zhytomyr)"}},
-    { type:"Feature",
-      geometry:{type:"Polygon",coordinates:[[[30.2,46.0],[35.2,46.0],[35.2,48.2],[30.2,48.2],[30.2,46.0]]]},
-      properties:{name:"Southern distributed zone (Odesa, Mykolaiv region)"}},
-  ]
-};
 
 // ══════════════════════════════════════════════════════════════════
 //  MAP INIT
@@ -597,12 +547,13 @@ map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-ri
 //  LAYER VISIBILITY STATE
 // ══════════════════════════════════════════════════════════════════
 
-const layerVis = { strikes: true, oblasts: false, resilience: false };
+const layerVis = { strikes: true, oblasts: false, idps: false, sites: false };
 
 const GROUPS = {
-  strikes:    ["strikes-heat", "strikes-dots"],
-  oblasts:    ["oblasts-fill", "oblasts-line"],
-  resilience: ["micro-fill", "micro-line", "plants-dots"],
+  strikes: ["strikes-heat", "strikes-dots"],
+  oblasts: ["oblasts-fill-strikes"],          // oblasts-line handled separately
+  idps:    ["oblasts-fill-idps"],             // oblasts-line handled separately
+  sites:   ["sites-airbases", "sites-borders"],
 };
 
 function setGroupVis(group, visible) {
@@ -612,11 +563,34 @@ function setGroupVis(group, visible) {
   }
 }
 
+function syncOblastLine() {
+  const show = layerVis.oblasts || layerVis.idps;
+  if (map.getLayer("oblasts-line"))
+    map.setLayoutProperty("oblasts-line", "visibility", show ? "visible" : "none");
+}
+
 function toggleLayer(group) {
-  layerVis[group] = !layerVis[group];
+  const turningOn = !layerVis[group];
+
+  // Mutual exclusion: oblasts and idps are alternative choropleth modes
+  if (group === "idps" && turningOn && layerVis.oblasts) {
+    layerVis.oblasts = false;
+    document.getElementById("box-oblasts").classList.remove("on");
+    setGroupVis("oblasts", false);
+  } else if (group === "oblasts" && turningOn && layerVis.idps) {
+    layerVis.idps = false;
+    document.getElementById("box-idps").classList.remove("on");
+    setGroupVis("idps", false);
+  }
+
+  layerVis[group] = turningOn;
   const box = document.getElementById("box-" + group);
-  if (box) box.classList.toggle("on", layerVis[group]);
-  setGroupVis(group, layerVis[group]);
+  if (box) box.classList.toggle("on", turningOn);
+  setGroupVis(group, turningOn);
+
+  // Shared boundary line follows whichever choropleth is active
+  if (group === "oblasts" || group === "idps") syncOblastLine();
+
   updateLegend();
 }
 
@@ -640,27 +614,32 @@ function updateLegend() {
 
   if (layerVis.oblasts) {
     if (h) h += `<div class="legend-gap"></div>`;
-    h += `<div class="legend-sub">Oblast density</div>`;
+    h += `<div class="legend-sub">Oblast strike density</div>`;
     h += `<div class="legend-swatch-row">
-      <div style="width:64px;height:7px;background:linear-gradient(to right,rgba(90,106,138,0.25),#e8a33d,#c94444);border-radius:2px;flex-shrink:0"></div>
+      <div style="width:64px;height:7px;background:linear-gradient(to right,rgba(80,100,130,0.25),#e8a33d,#c94444);border-radius:2px;flex-shrink:0"></div>
       <span class="legend-label">Fewer → more strikes</span>
     </div>`;
   }
 
-  if (layerVis.resilience) {
+  if (layerVis.idps) {
     if (h) h += `<div class="legend-gap"></div>`;
-    h += `<div class="legend-sub">Energy infrastructure</div>`;
+    h += `<div class="legend-sub">Internally displaced (IOM DTM)</div>`;
+    h += `<div class="legend-swatch-row">
+      <div style="width:64px;height:7px;background:linear-gradient(to right,rgba(60,80,180,0.2),rgba(100,50,210,0.55),rgba(150,30,220,0.7));border-radius:2px;flex-shrink:0"></div>
+      <span class="legend-label">Fewer → more IDPs</span>
+    </div>`;
+  }
+
+  if (layerVis.sites) {
+    if (h) h += `<div class="legend-gap"></div>`;
+    h += `<div class="legend-sub">Military sites &amp; crossings</div>`;
     h += `<div class="legend-item">
-      <div class="legend-dot" style="background:#e8413a"></div>
-      <span class="legend-label">Nuclear plant</span>
+      <div class="legend-dot" style="background:rgba(245,240,230,0.85);border:2px solid #e8a33d;width:9px;height:9px;box-sizing:border-box"></div>
+      <span class="legend-label">Air base / military airport</span>
     </div>
     <div class="legend-item">
-      <div class="legend-dot" style="background:#e07040"></div>
-      <span class="legend-label">Thermal / hydro plant</span>
-    </div>
-    <div class="legend-item">
-      <div class="legend-dot" style="background:rgba(80,200,80,0.55);border:1px solid rgba(80,200,80,0.5)"></div>
-      <span class="legend-label">Proposed distributed zone</span>
+      <div class="legend-dot" style="background:#4cba88"></div>
+      <span class="legend-label">Active border crossing</span>
     </div>`;
   }
 
@@ -729,24 +708,6 @@ function showStrikeTooltip(e) {
       : "");
 }
 
-function showPlantTooltip(e) {
-  const f = e.features[0];
-  if (!f) return;
-  const p = f.properties;
-  const wrapW = mapWrap.clientWidth;
-  const flip  = e.point.x > wrapW * 0.72;
-  tooltip.style.display = "block";
-  tooltip.style.left    = flip ? "auto" : (e.point.x + 14) + "px";
-  tooltip.style.right   = flip ? (wrapW - e.point.x + 14) + "px" : "auto";
-  tooltip.style.top     = (e.point.y - 8) + "px";
-
-  const kindColor = p.kind === "nuclear" ? "#e8413a" : "#e07040";
-  tooltip.innerHTML =
-    `<div class="tt-date" style="color:${kindColor}">${p.kind.toUpperCase()}</div>` +
-    `<div class="tt-loc">${p.name}</div>` +
-    (p.note ? `<div class="tt-admin" style="color:var(--dim);margin-top:4px">${p.note}</div>` : "");
-}
-
 function hideTooltip() { tooltip.style.display = "none"; }
 
 // ══════════════════════════════════════════════════════════════════
@@ -767,24 +728,45 @@ map.on("load", () => {
     .then(data => {
       map.addSource("oblasts", { type: "geojson", data });
 
+      // Strike-density choropleth (amber/red scale by `n`)
       map.addLayer({
-        id: "oblasts-fill",
+        id: "oblasts-fill-strikes",
         type: "fill",
         source: "oblasts",
         layout: { visibility: "none" },
         paint: {
           "fill-color": [
             "interpolate", ["linear"], ["get", "n"],
-            0,     "rgba(14,18,24,0.15)",
-            50,    "rgba(80,100,130,0.28)",
-            500,   "rgba(180,130,50,0.38)",
-            2000,  "rgba(232,163,61,0.48)",
-            8000,  "rgba(201,68,68,0.55)"
+            0,    "rgba(14,18,24,0.15)",
+            50,   "rgba(80,100,130,0.28)",
+            500,  "rgba(180,130,50,0.38)",
+            2000, "rgba(232,163,61,0.48)",
+            8000, "rgba(201,68,68,0.55)"
           ],
           "fill-opacity": 1
         }
       }, "carto-labels");
 
+      // IDP choropleth (blue→purple scale by `idps`)
+      map.addLayer({
+        id: "oblasts-fill-idps",
+        type: "fill",
+        source: "oblasts",
+        layout: { visibility: "none" },
+        paint: {
+          "fill-color": [
+            "interpolate", ["linear"], ["get", "idps"],
+            0,       "rgba(14,18,24,0.10)",
+            50000,   "rgba(60,80,200,0.28)",
+            150000,  "rgba(90,55,200,0.42)",
+            300000,  "rgba(120,40,210,0.54)",
+            588000,  "rgba(155,25,220,0.65)"
+          ],
+          "fill-opacity": 1
+        }
+      }, "carto-labels");
+
+      // Shared boundary line — shown when either choropleth is active
       map.addLayer({
         id: "oblasts-line",
         type: "line",
@@ -795,57 +777,98 @@ map.on("load", () => {
           "line-width":  0.6
         }
       }, "carto-labels");
+
+      // Oblast hover tooltip — shows both strike count and IDP data
+      function showOblastTooltip(e) {
+        const f = e.features[0];
+        if (!f) return;
+        const p = f.properties;
+        const wrapW = mapWrap.clientWidth;
+        const flip  = e.point.x > wrapW * 0.72;
+        tooltip.style.display = "block";
+        tooltip.style.left  = flip ? "auto" : (e.point.x + 14) + "px";
+        tooltip.style.right = flip ? (wrapW - e.point.x + 14) + "px" : "auto";
+        tooltip.style.top   = (e.point.y - 8) + "px";
+        tooltip.innerHTML =
+          `<div class="tt-date" style="color:var(--dim)">${p.name}</div>` +
+          `<div class="tt-type" style="border-top:none;padding-top:0;margin-top:4px">` +
+            `<span style="color:var(--accent)">${fmtNum(p.n)}</span> strikes recorded` +
+          `</div>` +
+          (p.idps > 0
+            ? `<div class="tt-type" style="border-top:1px solid var(--rule);padding-top:5px;margin-top:5px">` +
+                `<span style="color:#a060d8">${fmtNum(p.idps)}</span> internally displaced` +
+                (p.ret > 0 ? `<br/><span style="color:var(--dim)">${fmtNum(p.ret)}</span> returnees` : "") +
+              `</div>`
+            : "");
+      }
+
+      for (const lyr of ["oblasts-fill-strikes", "oblasts-fill-idps"]) {
+        map.on("mousemove",  lyr, e => { map.getCanvas().style.cursor = "crosshair"; showOblastTooltip(e); });
+        map.on("mouseleave", lyr, () => { map.getCanvas().style.cursor = ""; hideTooltip(); });
+      }
     });
 
-  // ── RESILIENCE LAYER — distributed zones ─────────────────────────
-  map.addSource("micro",  { type: "geojson", data: MICRO_GEOJSON  });
-  map.addSource("plants", { type: "geojson", data: PLANTS_GEOJSON });
+  // ── MILITARY SITES & BORDER CROSSINGS ────────────────────────────
+  fetch("bases_and_crossings.geojson")
+    .then(r => r.json())
+    .then(data => {
+      map.addSource("sites", { type: "geojson", data });
 
-  map.addLayer({
-    id: "micro-fill",
-    type: "fill",
-    source: "micro",
-    layout: { visibility: "none" },
-    paint: { "fill-color": "rgba(80,200,80,0.06)" }
-  }, "carto-labels");
+      // Air bases — white circle with amber ring
+      map.addLayer({
+        id: "sites-airbases",
+        type: "circle",
+        source: "sites",
+        filter: ["==", ["get", "t"], "airbase"],
+        layout: { visibility: "none" },
+        paint: {
+          "circle-radius":       6,
+          "circle-color":        "rgba(245,240,230,0.85)",
+          "circle-opacity":      0.90,
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#e8a33d"
+        }
+      }, "carto-labels");
 
-  map.addLayer({
-    id: "micro-line",
-    type: "line",
-    source: "micro",
-    layout: { visibility: "none" },
-    paint: {
-      "line-color":     "rgba(80,200,80,0.50)",
-      "line-width":      1.4,
-      "line-dasharray": [5, 3]
-    }
-  }, "carto-labels");
+      // Border crossings — green circles
+      map.addLayer({
+        id: "sites-borders",
+        type: "circle",
+        source: "sites",
+        filter: ["==", ["get", "t"], "border"],
+        layout: { visibility: "none" },
+        paint: {
+          "circle-radius":       7,
+          "circle-color":        "#4cba88",
+          "circle-opacity":      0.88,
+          "circle-stroke-width": 1.5,
+          "circle-stroke-color": "rgba(255,255,255,0.25)"
+        }
+      }, "carto-labels");
 
-  map.addLayer({
-    id: "plants-dots",
-    type: "circle",
-    source: "plants",
-    layout: { visibility: "none" },
-    paint: {
-      "circle-radius": 7,
-      "circle-color": ["match", ["get","kind"],
-        "nuclear", "#e8413a",
-        "hydro",   "#e8413a",
-        "#e07040"],
-      "circle-opacity":      0.88,
-      "circle-stroke-width": 1.5,
-      "circle-stroke-color": "rgba(255,255,255,0.20)"
-    }
-  }, "carto-labels");
+      // Tooltip for both site types
+      function showSiteTooltip(e) {
+        const f = e.features[0];
+        if (!f) return;
+        const p = f.properties;
+        const wrapW = mapWrap.clientWidth;
+        const flip  = e.point.x > wrapW * 0.72;
+        tooltip.style.display = "block";
+        tooltip.style.left  = flip ? "auto" : (e.point.x + 14) + "px";
+        tooltip.style.right = flip ? (wrapW - e.point.x + 14) + "px" : "auto";
+        tooltip.style.top   = (e.point.y - 8) + "px";
+        const typeColor = p.t === "airbase" ? "rgba(245,240,230,0.7)" : "#4cba88";
+        tooltip.innerHTML =
+          `<div class="tt-date" style="color:${typeColor}">${p.t === "airbase" ? "Air base" : "Border crossing"}</div>` +
+          `<div class="tt-loc">${p.name}</div>` +
+          (p.note ? `<div class="tt-admin" style="color:var(--dim);margin-top:3px">${p.note}</div>` : "");
+      }
 
-  map.on("mouseenter", "plants-dots", e => {
-    map.getCanvas().style.cursor = "crosshair";
-    showPlantTooltip(e);
-  });
-  map.on("mouseleave", "plants-dots", () => {
-    map.getCanvas().style.cursor = "";
-    hideTooltip();
-  });
+      for (const lyr of ["sites-airbases", "sites-borders"]) {
+        map.on("mouseenter", lyr, e => { map.getCanvas().style.cursor = "crosshair"; showSiteTooltip(e); });
+        map.on("mouseleave", lyr, () => { map.getCanvas().style.cursor = ""; hideTooltip(); });
+      }
+    });
 
   // ── STRIKE LAYERS — loaded last, render on top ────────────────────
   fetch("strikes.geojson")
