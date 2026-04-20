@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>The War Comes Home — Russia's Strikes on Ukraine</title>
+
+<link href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+
+<style>
+/* ══════════════════════════════════════════════════════════════
+   TOKENS
+   ══════════════════════════════════════════════════════════════ */
+:root {
+  --bg:        #0a0d12;
+  --bg-panel:  #0e1218;
+  --paper:     #d8d2c6;
+  --dim:       #877e72;
+  --faint:     #484340;
+  --rule:      rgba(216,210,198,0.08);
+  --rule-s:    rgba(216,210,198,0.15);
+  --accent:    #e8a33d;
+  --red:       #c94444;
+  --pink:      #b86ea0;
+  --blue:      #5888b8;
+  --serif:     "Fraunces", Georgia, serif;
+  --sans:      "IBM Plex Sans", system-ui, sans-serif;
+  --mono:      "IBM Plex Mono", ui-monospace, monospace;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   RESET + LAYOUT
+   ══════════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--paper); -webkit-font-smoothing: antialiased; }
+
+#app {
+  display: grid;
+  grid-template-rows: 42px 1fr;
+  grid-template-columns: 296px 1fr;
+  height: 100vh;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   HEADER
+   ══════════════════════════════════════════════════════════════ */
+header {
+  grid-column: 1 / -1;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--rule-s);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+  z-index: 50;
+}
+.h-title {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.13em;
+  color: var(--paper);
+  text-transform: uppercase;
+}
+.h-meta {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  color: var(--faint);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SIDEBAR
+   ══════════════════════════════════════════════════════════════ */
+#sidebar {
+  background: var(--bg-panel);
+  border-right: 1px solid var(--rule-s);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  scrollbar-width: thin;
+  scrollbar-color: var(--faint) transparent;
+}
+
+/* ── Intro ── */
+.sb-intro {
+  padding: 22px 20px 20px;
+  border-bottom: 1px solid var(--rule);
+}
+.sb-kicker {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.22em;
+  color: var(--faint);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+h1 {
+  font-family: var(--serif);
+  font-size: 32px;
+  font-weight: 300;
+  line-height: 1.0;
+  letter-spacing: -0.02em;
+  color: var(--paper);
+  margin-bottom: 14px;
+  font-variation-settings: "opsz" 96;
+}
+h1 em { font-style: italic; color: var(--dim); font-weight: 300; }
+
+.sb-narrative {
+  font-family: var(--sans);
+  font-size: 12.5px;
+  font-weight: 300;
+  line-height: 1.7;
+  color: var(--dim);
+}
+
+/* ── Section wrapper ── */
+.sb-section {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--rule);
+  flex-shrink: 0;
+}
+.sb-section-head {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.26em;
+  color: var(--faint);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+/* ── Layer toggles ── */
+.layer-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 9px 0;
+  cursor: pointer;
+  border-bottom: 1px solid var(--rule);
+  user-select: none;
+}
+.layer-row:last-child { border-bottom: none; }
+.layer-row:hover .layer-name { color: var(--accent); }
+
+.layer-box {
+  width: 14px;
+  height: 14px;
+  min-width: 14px;
+  margin-top: 2px;
+  border: 1px solid var(--faint);
+  position: relative;
+  transition: background 0.12s, border-color 0.12s;
+  flex-shrink: 0;
+}
+.layer-box.on {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.layer-box.on::after {
+  content: "";
+  position: absolute;
+  inset: 2px 2px 3px 2px;
+  background: var(--bg-panel);
+  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+}
+
+.layer-name {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--paper);
+  line-height: 1.3;
+  transition: color 0.12s;
+}
+.layer-desc {
+  font-family: var(--sans);
+  font-size: 10.5px;
+  color: var(--faint);
+  line-height: 1.45;
+  margin-top: 2px;
+}
+
+/* ── Legend ── */
+#legend-section { flex-shrink: 0; }
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 3px 0;
+}
+.legend-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.legend-label {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--dim);
+  letter-spacing: 0.03em;
+}
+.legend-swatch-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 3px 0;
+}
+.legend-gap { height: 6px; }
+.legend-sub {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--faint);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin: 4px 0 6px;
+}
+
+/* ── Footer ── */
+.sb-footer {
+  margin-top: auto;
+  padding: 14px 20px;
+  border-top: 1px solid var(--rule);
+}
+.sb-footer-text {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--faint);
+  letter-spacing: 0.05em;
+  line-height: 1.9;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MAP AREA
+   ══════════════════════════════════════════════════════════════ */
+#map-wrap {
+  position: relative;
+  overflow: hidden;
+}
+#map { width: 100%; height: 100%; }
+
+/* ══════════════════════════════════════════════════════════════
+   TOOLTIP
+   ══════════════════════════════════════════════════════════════ */
+#tooltip {
+  position: absolute;
+  display: none;
+  pointer-events: none;
+  z-index: 30;
+  background: rgba(10,13,18,0.93);
+  border: 1px solid var(--rule-s);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 10px 13px;
+  max-width: 230px;
+  min-width: 140px;
+}
+.tt-date  { font-family: var(--mono); font-size: 10px; color: var(--accent); letter-spacing: 0.1em; margin-bottom: 5px; }
+.tt-loc   { font-family: var(--sans); font-size: 12.5px; color: var(--paper); font-weight: 500; line-height: 1.3; }
+.tt-admin { font-family: var(--sans); font-size: 11px; color: var(--faint); margin-top: 1px; }
+.tt-type  { font-family: var(--sans); font-size: 11px; color: var(--dim); margin-top: 5px; border-top: 1px solid var(--rule); padding-top: 5px; }
+.tt-fat   { font-family: var(--mono); font-size: 10.5px; margin-top: 4px; letter-spacing: 0.04em; }
+
+/* ══════════════════════════════════════════════════════════════
+   TIME CONTROL
+   ══════════════════════════════════════════════════════════════ */
+#time-control {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(10,13,18,0.90);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid var(--rule-s);
+  padding: 10px 22px 15px;
+  z-index: 20;
+}
+#time-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 9px;
+}
+#time-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--faint);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+#time-date {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--accent);
+  letter-spacing: 0.07em;
+}
+#time-ends {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 7px;
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--faint);
+  letter-spacing: 0.07em;
+}
+#strike-count { color: var(--dim); }
+
+/* Range input */
+#time-slider {
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 2px;
+  background: var(--rule-s);
+  outline: none;
+  cursor: pointer;
+  border-radius: 1px;
+}
+#time-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 13px; height: 13px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: none;
+}
+#time-slider::-moz-range-thumb {
+  width: 13px; height: 13px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: none;
+  cursor: pointer;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MAPLIBRE CHROME OVERRIDES
+   ══════════════════════════════════════════════════════════════ */
+.maplibregl-ctrl-attrib {
+  background: rgba(10,13,18,0.65) !important;
+  color: var(--faint) !important;
+  font-family: var(--mono) !important;
+  font-size: 9px !important;
+}
+.maplibregl-ctrl-attrib a { color: var(--dim) !important; }
+.maplibregl-ctrl-group {
+  background: var(--bg-panel) !important;
+  border: 1px solid var(--rule-s) !important;
+  box-shadow: none !important;
+}
+.maplibregl-ctrl-group button { filter: invert(0.65); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ══ HEADER ══════════════════════════════════════════════════════ -->
+  <header>
+    <span class="h-title">The War Comes Home</span>
+    <span class="h-meta">Russia's Strikes on Ukraine &nbsp;·&nbsp; 2022–2025</span>
+  </header>
+
+  <!-- ══ SIDEBAR ═════════════════════════════════════════════════════ -->
+  <aside id="sidebar">
+
+    <div class="sb-intro">
+      <div class="sb-kicker">Feb 2022 — Present</div>
+      <h1>The War<br/>Comes <em>Home.</em></h1>
+      <p class="sb-narrative">
+        Russia's assault began on military targets — airfields, command centers,
+        supply depots. By October 2022, the campaign shifted: power stations were
+        struck through winter, residential buildings hit across the country,
+        hospitals and schools deliberately targeted. The Kyiv School of Economics
+        documents over $170 billion in infrastructure damage. This map records
+        38,564 incidents from ACLED's conflict database. Drag the slider to watch
+        the pattern change.
+      </p>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-section-head">Layers</div>
+
+      <div class="layer-row" onclick="toggleLayer('strikes')">
+        <div class="layer-box on" id="box-strikes"></div>
+        <div>
+          <div class="layer-name">Strike incidents</div>
+          <div class="layer-desc">Dots colored by target type. Size reflects fatalities.</div>
+        </div>
+      </div>
+
+      <div class="layer-row" onclick="toggleLayer('oblasts')">
+        <div class="layer-box" id="box-oblasts"></div>
+        <div>
+          <div class="layer-name">Oblast strike density</div>
+          <div class="layer-desc">Cumulative strike count per administrative region.</div>
+        </div>
+      </div>
+
+      <div class="layer-row" onclick="toggleLayer('resilience')">
+        <div class="layer-box" id="box-resilience"></div>
+        <div>
+          <div class="layer-name">Energy infrastructure</div>
+          <div class="layer-desc">Major plants (centralized, vulnerable) vs. proposed distributed zones.</div>
+        </div>
+      </div>
+
+    </div><!-- layers -->
+
+    <div class="sb-section" id="legend-section">
+      <div class="sb-section-head">Legend</div>
+      <div id="legend-content">
+        <span style="font-family:var(--mono);font-size:10px;color:var(--faint)">Loading…</span>
+      </div>
+    </div>
+
+    <div class="sb-footer">
+      <div class="sb-footer-text">
+        ACLED — Armed Conflict Location &amp; Event Data Project<br/>
+        KSE Institute — Kyiv School of Economics, 2024<br/>
+        Boundaries — Natural Earth Admin 1
+      </div>
+    </div>
+
+  </aside><!-- #sidebar -->
+
+  <!-- ══ MAP ═════════════════════════════════════════════════════════ -->
+  <div id="map-wrap">
+    <div id="map"></div>
+    <div id="tooltip"></div>
+
+    <div id="time-control">
+      <div id="time-header">
+        <span id="time-label">Showing strikes through</span>
+        <span id="time-date">—</span>
+      </div>
+      <input type="range" id="time-slider" min="0" max="100" value="100"/>
+      <div id="time-ends">
+        <span>Feb 2022</span>
+        <span id="strike-count">—</span>
+        <span>Today</span>
+      </div>
+    </div>
+  </div><!-- #map-wrap -->
+
+</div><!-- #app -->
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+//  CONSTANTS & HELPERS
+// ══════════════════════════════════════════════════════════════════
+
+const START_DATE = "2022-02-24";
+const START_MS   = new Date(START_DATE).getTime();
+
+const CAT = {
+  1: { label: "Energy / infrastructure", color: "#e8a33d" },
+  2: { label: "Residential",             color: "#c94444" },
+  3: { label: "Healthcare",              color: "#b86ea0" },
+  4: { label: "Education",               color: "#5888b8" },
+  5: { label: "Other / unclassified",    color: "rgba(160,154,142,0.45)" },
+};
+
+const SUB_LABEL = {
+  "a":  "Air / drone strike",
+  "sh": "Shelling / missile attack",
+  "ie": "IED / landmine",
+};
+
+function isoFromSlider(pct) {
+  const totalDays = Math.ceil((Date.now() - START_MS) / 86400000);
+  const d = new Date(START_MS + (pct / 100) * totalDays * 86400000);
+  return d.toISOString().slice(0, 10);
+}
+
+function fmtDate(iso) {
+  const [y, m, d] = iso.split("-");
+  const MO = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return `${MO[+m - 1]} ${+d}, ${y}`;
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  SOLUTION LAYER — HARDCODED DATA
+// ══════════════════════════════════════════════════════════════════
+
+// Major Ukrainian power plants — approximate coordinates
+const PLANTS_GEOJSON = {
+  type: "FeatureCollection",
+  features: [
+    // Nuclear
+    { type:"Feature", geometry:{type:"Point",coordinates:[34.582,47.507]},
+      properties:{name:"Zaporizhzhia NPP",  kind:"nuclear", note:"Russian-occupied since March 2022"}},
+    { type:"Feature", geometry:{type:"Point",coordinates:[26.649,50.302]},
+      properties:{name:"Khmelnytskyi NPP",  kind:"nuclear", note:""}},
+    { type:"Feature", geometry:{type:"Point",coordinates:[25.890,51.327]},
+      properties:{name:"Rivne NPP",         kind:"nuclear", note:""}},
+    { type:"Feature", geometry:{type:"Point",coordinates:[31.213,47.836]},
+      properties:{name:"South Ukraine NPP", kind:"nuclear", note:""}},
+    // Thermal
+    { type:"Feature", geometry:{type:"Point",coordinates:[24.628,49.258]},
+      properties:{name:"Burshtyn TPP",      kind:"thermal", note:""}},
+    { type:"Feature", geometry:{type:"Point",coordinates:[30.786,50.039]},
+      properties:{name:"Trypilska TPP",     kind:"thermal", note:"Destroyed April 2024"}},
+    { type:"Feature", geometry:{type:"Point",coordinates:[29.215,48.682]},
+      properties:{name:"Ladyzhyn TPP",      kind:"thermal", note:""}},
+    { type:"Feature", geometry:{type:"Point",coordinates:[35.024,48.402]},
+      properties:{name:"Prydniprovska TPP", kind:"thermal", note:"Heavily damaged"}},
+    { type:"Feature", geometry:{type:"Point",coordinates:[33.377,47.973]},
+      properties:{name:"Kryvorizka TPP",    kind:"thermal", note:""}},
+    { type:"Feature", geometry:{type:"Point",coordinates:[24.367,50.194]},
+      properties:{name:"Dobrotvirska TPP",  kind:"thermal", note:""}},
+    { type:"Feature", geometry:{type:"Point",coordinates:[36.347,49.617]},
+      properties:{name:"Zmiivska TPP",      kind:"thermal", note:"Damaged 2022"}},
+    { type:"Feature", geometry:{type:"Point",coordinates:[38.277,48.524]},
+      properties:{name:"Vuhlehirska TPP",   kind:"thermal", note:"Russian-occupied territory"}},
+    { type:"Feature", geometry:{type:"Point",coordinates:[37.589,48.864]},
+      properties:{name:"Slovianska TPP",    kind:"thermal", note:"Russian-occupied territory"}},
+    // Hydro
+    { type:"Feature", geometry:{type:"Point",coordinates:[35.085,47.854]},
+      properties:{name:"Dnipro HPP",        kind:"hydro",   note:"Damaged 2023"}},
+    { type:"Feature", geometry:{type:"Point",coordinates:[34.665,47.637]},
+      properties:{name:"Kakhovka HPP",      kind:"hydro",   note:"Dam destroyed June 2023"}},
+  ]
+};
+
+// Illustrative distributed energy zones
+// These are simplified polygons showing regions where distributed infrastructure
+// (rooftop solar, small-scale gas, microgrids) could reduce centralized vulnerability.
+const MICRO_GEOJSON = {
+  type: "FeatureCollection",
+  features: [
+    { type:"Feature",
+      geometry:{type:"Polygon",coordinates:[[[22.2,49.0],[26.8,49.0],[26.8,51.7],[22.2,51.7],[22.2,49.0]]]},
+      properties:{name:"Western distributed zone (Lviv, Ivano-Frankivsk, Ternopil)"}},
+    { type:"Feature",
+      geometry:{type:"Polygon",coordinates:[[[27.2,48.4],[31.2,48.4],[31.2,51.0],[27.2,51.0],[27.2,48.4]]]},
+      properties:{name:"Central distributed zone (Vinnytsia, Khmelnytskyi, Zhytomyr)"}},
+    { type:"Feature",
+      geometry:{type:"Polygon",coordinates:[[[30.2,46.0],[35.2,46.0],[35.2,48.2],[30.2,48.2],[30.2,46.0]]]},
+      properties:{name:"Southern distributed zone (Odesa, Mykolaiv region)"}},
+  ]
+};
+
+// ══════════════════════════════════════════════════════════════════
+//  MAP INIT
+// ══════════════════════════════════════════════════════════════════
+
+const map = new maplibregl.Map({
+  container: "map",
+  style: {
+    version: 8,
+    sources: {
+      "carto-dark": {
+        type: "raster",
+        tiles: [
+          "https://a.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png",
+          "https://b.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png",
+          "https://c.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png",
+          "https://d.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png"
+        ],
+        tileSize: 256,
+        attribution: "© OpenStreetMap contributors, © CARTO"
+      },
+      "carto-labels": {
+        type: "raster",
+        tiles: [
+          "https://a.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}.png",
+          "https://b.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}.png",
+          "https://c.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}.png",
+          "https://d.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}.png"
+        ],
+        tileSize: 256
+      }
+    },
+    layers: [
+      { id:"bg",         type:"background", paint:{"background-color":"#0a0d12"} },
+      { id:"carto-dark", type:"raster",     source:"carto-dark",
+        paint:{"raster-opacity":0.82,"raster-saturation":-0.35} }
+    ]
+  },
+  center: [32.5, 49.2],
+  zoom: 5.5,
+  minZoom: 4,
+  maxZoom: 14,
+  pitchWithRotate: false,
+});
+
+map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+
+// ══════════════════════════════════════════════════════════════════
+//  LAYER VISIBILITY STATE
+// ══════════════════════════════════════════════════════════════════
+
+const layerVis = { strikes: true, oblasts: false, resilience: false };
+
+const GROUPS = {
+  strikes:    ["strikes-heat", "strikes-dots"],
+  oblasts:    ["oblasts-fill", "oblasts-line"],
+  resilience: ["micro-fill", "micro-line", "plants-dots"],
+};
+
+function setGroupVis(group, visible) {
+  for (const id of GROUPS[group] || []) {
+    if (map.getLayer(id))
+      map.setLayoutProperty(id, "visibility", visible ? "visible" : "none");
+  }
+}
+
+function toggleLayer(group) {
+  layerVis[group] = !layerVis[group];
+  const box = document.getElementById("box-" + group);
+  if (box) box.classList.toggle("on", layerVis[group]);
+  setGroupVis(group, layerVis[group]);
+  updateLegend();
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  LEGEND (auto-generated from layerVis)
+// ══════════════════════════════════════════════════════════════════
+
+function updateLegend() {
+  const el = document.getElementById("legend-content");
+  let h = "";
+
+  if (layerVis.strikes) {
+    for (let k = 1; k <= 5; k++) {
+      const v = CAT[k];
+      h += `<div class="legend-item">
+        <div class="legend-dot" style="background:${v.color}"></div>
+        <span class="legend-label">${v.label}</span>
+      </div>`;
+    }
+  }
+
+  if (layerVis.oblasts) {
+    if (h) h += `<div class="legend-gap"></div>`;
+    h += `<div class="legend-sub">Oblast density</div>`;
+    h += `<div class="legend-swatch-row">
+      <div style="width:64px;height:7px;background:linear-gradient(to right,rgba(90,106,138,0.25),#e8a33d,#c94444);border-radius:2px;flex-shrink:0"></div>
+      <span class="legend-label">Fewer → more strikes</span>
+    </div>`;
+  }
+
+  if (layerVis.resilience) {
+    if (h) h += `<div class="legend-gap"></div>`;
+    h += `<div class="legend-sub">Energy infrastructure</div>`;
+    h += `<div class="legend-item">
+      <div class="legend-dot" style="background:#e8413a"></div>
+      <span class="legend-label">Nuclear plant</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#e07040"></div>
+      <span class="legend-label">Thermal / hydro plant</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:rgba(80,200,80,0.55);border:1px solid rgba(80,200,80,0.5)"></div>
+      <span class="legend-label">Proposed distributed zone</span>
+    </div>`;
+  }
+
+  if (!h) h = `<span style="font-family:var(--mono);font-size:10px;color:var(--faint)">Enable a layer to see legend.</span>`;
+  el.innerHTML = h;
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  TIME SLIDER
+// ══════════════════════════════════════════════════════════════════
+
+const slider     = document.getElementById("time-slider");
+const timeDateEl = document.getElementById("time-date");
+
+let rafPending = false;
+
+function applyTimeFilter() {
+  const dateStr = isoFromSlider(+slider.value);
+  timeDateEl.textContent = fmtDate(dateStr);
+  const f = ["<=", ["get", "dt"], dateStr];
+  if (map.getLayer("strikes-heat")) map.setFilter("strikes-heat", f);
+  if (map.getLayer("strikes-dots")) map.setFilter("strikes-dots", f);
+  rafPending = false;
+}
+
+slider.addEventListener("input", () => {
+  if (!rafPending) {
+    rafPending = true;
+    requestAnimationFrame(applyTimeFilter);
+  }
+});
+
+// ══════════════════════════════════════════════════════════════════
+//  TOOLTIP
+// ══════════════════════════════════════════════════════════════════
+
+const tooltip = document.getElementById("tooltip");
+const mapWrap = document.getElementById("map-wrap");
+
+function showStrikeTooltip(e) {
+  const f = e.features[0];
+  if (!f) return;
+  const p   = f.properties;
+  const cat = CAT[p.c] || CAT[5];
+  const sub = SUB_LABEL[p.s] || p.s;
+
+  // Flip to left side if near right edge
+  const wrapW = mapWrap.clientWidth;
+  const flip  = e.point.x > wrapW * 0.72;
+  tooltip.style.display = "block";
+  tooltip.style.left    = flip ? "auto" : (e.point.x + 14) + "px";
+  tooltip.style.right   = flip ? (wrapW - e.point.x + 14) + "px" : "auto";
+  tooltip.style.top     = (e.point.y - 8) + "px";
+
+  tooltip.innerHTML =
+    `<div class="tt-date">${fmtDate(p.dt)}</div>` +
+    `<div class="tt-loc">${p.l}</div>` +
+    `<div class="tt-admin">${p.a}</div>` +
+    `<div class="tt-type">` +
+      `${sub} &nbsp;·&nbsp; <span style="color:${cat.color}">${cat.label}</span>` +
+    `</div>` +
+    (p.f > 0
+      ? `<div class="tt-fat" style="color:${p.f >= 10 ? "var(--red)" : "var(--dim)"}">` +
+        `${p.f}${p.f >= 50 ? "+" : ""} ${p.f === 1 ? "fatality" : "fatalities"}` +
+        `</div>`
+      : "");
+}
+
+function showPlantTooltip(e) {
+  const f = e.features[0];
+  if (!f) return;
+  const p = f.properties;
+  const wrapW = mapWrap.clientWidth;
+  const flip  = e.point.x > wrapW * 0.72;
+  tooltip.style.display = "block";
+  tooltip.style.left    = flip ? "auto" : (e.point.x + 14) + "px";
+  tooltip.style.right   = flip ? (wrapW - e.point.x + 14) + "px" : "auto";
+  tooltip.style.top     = (e.point.y - 8) + "px";
+
+  const kindColor = p.kind === "nuclear" ? "#e8413a" : "#e07040";
+  tooltip.innerHTML =
+    `<div class="tt-date" style="color:${kindColor}">${p.kind.toUpperCase()}</div>` +
+    `<div class="tt-loc">${p.name}</div>` +
+    (p.note ? `<div class="tt-admin" style="color:var(--dim);margin-top:4px">${p.note}</div>` : "");
+}
+
+function hideTooltip() { tooltip.style.display = "none"; }
+
+// ══════════════════════════════════════════════════════════════════
+//  MAP LOAD — ADD ALL LAYERS
+// ══════════════════════════════════════════════════════════════════
+
+map.on("load", () => {
+
+  // Labels on top (added first so we can insert data layers below it)
+  map.addLayer({
+    id: "carto-labels", type: "raster", source: "carto-labels",
+    paint: { "raster-opacity": 0.6 }
+  });
+
+  // ── OBLASTS — loaded first so strikes render above ────────────────
+  fetch("oblasts.geojson")
+    .then(r => r.json())
+    .then(data => {
+      map.addSource("oblasts", { type: "geojson", data });
+
+      map.addLayer({
+        id: "oblasts-fill",
+        type: "fill",
+        source: "oblasts",
+        layout: { visibility: "none" },
+        paint: {
+          "fill-color": [
+            "interpolate", ["linear"], ["get", "n"],
+            0,     "rgba(14,18,24,0.15)",
+            50,    "rgba(80,100,130,0.28)",
+            500,   "rgba(180,130,50,0.38)",
+            2000,  "rgba(232,163,61,0.48)",
+            8000,  "rgba(201,68,68,0.55)"
+          ],
+          "fill-opacity": 1
+        }
+      }, "carto-labels");
+
+      map.addLayer({
+        id: "oblasts-line",
+        type: "line",
+        source: "oblasts",
+        layout: { visibility: "none" },
+        paint: {
+          "line-color": "rgba(216,210,198,0.18)",
+          "line-width":  0.6
+        }
+      }, "carto-labels");
+    });
+
+  // ── RESILIENCE LAYER — distributed zones ─────────────────────────
+  map.addSource("micro",  { type: "geojson", data: MICRO_GEOJSON  });
+  map.addSource("plants", { type: "geojson", data: PLANTS_GEOJSON });
+
+  map.addLayer({
+    id: "micro-fill",
+    type: "fill",
+    source: "micro",
+    layout: { visibility: "none" },
+    paint: { "fill-color": "rgba(80,200,80,0.06)" }
+  }, "carto-labels");
+
+  map.addLayer({
+    id: "micro-line",
+    type: "line",
+    source: "micro",
+    layout: { visibility: "none" },
+    paint: {
+      "line-color":     "rgba(80,200,80,0.50)",
+      "line-width":      1.4,
+      "line-dasharray": [5, 3]
+    }
+  }, "carto-labels");
+
+  map.addLayer({
+    id: "plants-dots",
+    type: "circle",
+    source: "plants",
+    layout: { visibility: "none" },
+    paint: {
+      "circle-radius": 7,
+      "circle-color": ["match", ["get","kind"],
+        "nuclear", "#e8413a",
+        "hydro",   "#e8413a",
+        "#e07040"],
+      "circle-opacity":      0.88,
+      "circle-stroke-width": 1.5,
+      "circle-stroke-color": "rgba(255,255,255,0.20)"
+    }
+  }, "carto-labels");
+
+  map.on("mouseenter", "plants-dots", e => {
+    map.getCanvas().style.cursor = "crosshair";
+    showPlantTooltip(e);
+  });
+  map.on("mouseleave", "plants-dots", () => {
+    map.getCanvas().style.cursor = "";
+    hideTooltip();
+  });
+
+  // ── STRIKE LAYERS — loaded last, render on top ────────────────────
+  fetch("strikes.geojson")
+    .then(r => r.json())
+    .then(data => {
+      map.addSource("strikes", { type: "geojson", data });
+
+      // Heatmap at low zoom — density read without per-dot rendering
+      map.addLayer({
+        id: "strikes-heat",
+        type: "heatmap",
+        source: "strikes",
+        maxzoom: 8,
+        paint: {
+          "heatmap-weight":    ["interpolate",["linear"],["get","f"], 0,0.4, 50,2.0],
+          "heatmap-intensity": ["interpolate",["linear"],["zoom"], 3,0.5, 7,1.6],
+          "heatmap-color": [
+            "interpolate",["linear"],["heatmap-density"],
+            0,   "rgba(10,13,18,0)",
+            0.15,"rgba(80,100,130,0.4)",
+            0.45,"rgba(232,163,61,0.65)",
+            0.75,"rgba(201,68,68,0.82)",
+            1.0, "rgba(255,255,255,0.92)"
+          ],
+          "heatmap-radius":  ["interpolate",["linear"],["zoom"], 3,7, 7,20],
+          "heatmap-opacity": ["interpolate",["linear"],["zoom"], 6,1.0, 8,0.0]
+        }
+      }, "carto-labels");
+
+      // Individual circles at zoom 5+ — color-coded by category
+      const catColor = ["match", ["get","c"],
+        1, "#e8a33d",
+        2, "#c94444",
+        3, "#b86ea0",
+        4, "#5888b8",
+        "rgba(160,154,142,0.45)"
+      ];
+
+      map.addLayer({
+        id: "strikes-dots",
+        type: "circle",
+        source: "strikes",
+        minzoom: 5,
+        paint: {
+          "circle-radius": [
+            "interpolate",["linear"],["zoom"],
+            5, ["interpolate",["linear"],["get","f"], 0,1.8, 50,5],
+            9, ["interpolate",["linear"],["get","f"], 0,3,   50,12]
+          ],
+          "circle-color":        catColor,
+          "circle-opacity": [
+            "interpolate",["linear"],["zoom"], 5,0, 6,0.75
+          ],
+          "circle-stroke-width": 0.4,
+          "circle-stroke-color": "rgba(255,255,255,0.10)"
+        }
+      }, "carto-labels");
+
+      // Time slider init
+      slider.value = 100;
+      timeDateEl.textContent = fmtDate(new Date().toISOString().slice(0,10));
+      document.getElementById("strike-count").textContent =
+        data.features.length.toLocaleString() + " strikes";
+
+      // Hover tooltip
+      map.on("mousemove",  "strikes-dots", e => {
+        map.getCanvas().style.cursor = "crosshair";
+        showStrikeTooltip(e);
+      });
+      map.on("mouseleave", "strikes-dots", () => {
+        map.getCanvas().style.cursor = "";
+        hideTooltip();
+      });
+
+      updateLegend();
+    })
+    .catch(err => {
+      console.error("Failed to load strikes.geojson:", err);
+      document.getElementById("strike-count").textContent = "strikes unavailable";
+    });
+
+}); // map.on("load")
+</script>
+</body>
+</html>
