@@ -24,10 +24,10 @@
   --faint:     #484340;
   --rule:      rgba(216,210,198,0.08);
   --rule-s:    rgba(216,210,198,0.15);
-  --accent:    #e8a33d;
-  --red:       #c94444;
-  --pink:      #b86ea0;
-  --blue:      #5888b8;
+  --accent:    #b89860;
+  --red:       #8a4444;
+  --pink:      #7a5a70;
+  --blue:      #5a7088;
   --serif:     "Fraunces", Georgia, serif;
   --sans:      "IBM Plex Sans", system-ui, sans-serif;
   --mono:      "IBM Plex Mono", ui-monospace, monospace;
@@ -419,6 +419,14 @@ h1 em { font-style: italic; color: var(--dim); font-weight: 300; }
         </div>
       </div>
 
+      <div class="layer-row" onclick="toggleLayer('hrp')">
+        <div class="layer-box" id="box-hrp"></div>
+        <div>
+          <div class="layer-name">Humanitarian Response Plan</div>
+          <div class="layer-desc">Proposed: evacuation corridors, high-priority aid zones, and medical center locations.</div>
+        </div>
+      </div>
+
     </div><!-- layers -->
 
     <div class="sb-section" id="legend-section">
@@ -471,11 +479,11 @@ const START_MS   = new Date(START_DATE).getTime();
 function fmtNum(n) { return n != null ? (+n).toLocaleString() : "—"; }
 
 const CAT = {
-  1: { label: "Energy / infrastructure", color: "#e8a33d" },
-  2: { label: "Residential",             color: "#c94444" },
-  3: { label: "Healthcare",              color: "#b86ea0" },
-  4: { label: "Education",               color: "#5888b8" },
-  5: { label: "Other / unclassified",    color: "rgba(160,154,142,0.45)" },
+  1: { label: "Energy / infrastructure", color: "#9a8560" },
+  2: { label: "Residential",             color: "#8a4444" },
+  3: { label: "Healthcare",              color: "#7a5a70" },
+  4: { label: "Education",               color: "#5a7088" },
+  5: { label: "Other / unclassified",    color: "rgba(120,115,108,0.35)" },
 };
 
 const SUB_LABEL = {
@@ -547,13 +555,14 @@ map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-ri
 //  LAYER VISIBILITY STATE
 // ══════════════════════════════════════════════════════════════════
 
-const layerVis = { strikes: true, oblasts: false, idps: false, sites: false };
+const layerVis = { strikes: true, oblasts: false, idps: false, sites: false, hrp: false };
 
 const GROUPS = {
   strikes: ["strikes-heat", "strikes-dots"],
   oblasts: ["oblasts-fill-strikes"],          // oblasts-line handled separately
   idps:    ["oblasts-fill-idps"],             // oblasts-line handled separately
   sites:   ["sites-airbases", "sites-borders"],
+  hrp:     ["hrp-corridors", "hrp-zones", "hrp-zones-line", "hrp-medical"],
 };
 
 function setGroupVis(group, visible) {
@@ -616,7 +625,7 @@ function updateLegend() {
     if (h) h += `<div class="legend-gap"></div>`;
     h += `<div class="legend-sub">Oblast strike density</div>`;
     h += `<div class="legend-swatch-row">
-      <div style="width:64px;height:7px;background:linear-gradient(to right,rgba(80,100,130,0.25),#e8a33d,#c94444);border-radius:2px;flex-shrink:0"></div>
+      <div style="width:64px;height:7px;background:linear-gradient(to right,rgba(60,80,110,0.25),#9a8560,#8a4444);border-radius:2px;flex-shrink:0"></div>
       <span class="legend-label">Fewer → more strikes</span>
     </div>`;
   }
@@ -640,6 +649,23 @@ function updateLegend() {
     <div class="legend-item">
       <div class="legend-dot" style="background:#4cba88"></div>
       <span class="legend-label">Active border crossing</span>
+    </div>`;
+  }
+
+  if (layerVis.hrp) {
+    if (h) h += `<div class="legend-gap"></div>`;
+    h += `<div class="legend-sub">Humanitarian Response Plan <span style="font-size:8px;letter-spacing:0;text-transform:none;color:rgba(184,152,96,0.6)">(proposed)</span></div>`;
+    h += `<div class="legend-item">
+      <div style="width:22px;height:2px;flex-shrink:0;margin:3px 0;background:repeating-linear-gradient(to right,#b89860 0,#b89860 5px,transparent 5px,transparent 8px)"></div>
+      <span class="legend-label">Evacuation corridor</span>
+    </div>
+    <div class="legend-item">
+      <div style="width:12px;height:9px;flex-shrink:0;background:rgba(160,55,55,0.2);border:1px dashed rgba(180,75,75,0.55)"></div>
+      <span class="legend-label">High-priority aid zone</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#c06070;border:2px solid rgba(255,255,255,0.3);box-sizing:border-box"></div>
+      <span class="legend-label">Proposed medical/aid center</span>
     </div>`;
   }
 
@@ -711,6 +737,118 @@ function showStrikeTooltip(e) {
 function hideTooltip() { tooltip.style.display = "none"; }
 
 // ══════════════════════════════════════════════════════════════════
+//  HUMANITARIAN RESPONSE PLAN — inline GeoJSON (proposed/illustrative)
+// ══════════════════════════════════════════════════════════════════
+
+const HRP_DATA = { type:"FeatureCollection", features:[
+
+  // ── Evacuation corridors (LineStrings) ──────────────────────────
+  // Grounded in real ACLED strike counts and IOM IDP data
+  { type:"Feature", geometry:{ type:"LineString", coordinates:[
+      [34.80,50.91],[34.55,49.59]
+    ]}, properties:{ kind:"corridor", name:"Sumy → Poltava",
+      note:"8,539 strikes in Sumy Oblast. Corridor toward 178,000-IDP receiving city." }},
+
+  { type:"Feature", geometry:{ type:"LineString", coordinates:[
+      [34.80,50.91],[30.52,50.45],[25.32,50.62],[23.73,51.47]
+    ]}, properties:{ kind:"corridor", name:"Sumy → Dorohusk–Yahodyn (Poland)",
+      note:"Westward corridor via Kyiv and Rivne to EU border crossing." }},
+
+  { type:"Feature", geometry:{ type:"LineString", coordinates:[
+      [37.56,48.74],[35.04,48.46]
+    ]}, properties:{ kind:"corridor", name:"Donetsk → Dnipropetrovsk",
+      note:"Corridor toward highest IDP-receiving oblast (588,000 IDPs)." }},
+
+  { type:"Feature", geometry:{ type:"LineString", coordinates:[
+      [36.23,49.99],[34.55,49.59]
+    ]}, properties:{ kind:"corridor", name:"Kharkiv → Poltava",
+      note:"4,845 strikes. Kharkiv is both a major source and destination of displacement." }},
+
+  { type:"Feature", geometry:{ type:"LineString", coordinates:[
+      [36.23,49.99],[35.04,48.46]
+    ]}, properties:{ kind:"corridor", name:"Kharkiv → Dnipropetrovsk",
+      note:"Secondary corridor south toward the highest IDP-receiving oblast." }},
+
+  { type:"Feature", geometry:{ type:"LineString", coordinates:[
+      [32.62,46.64],[31.99,46.97]
+    ]}, properties:{ kind:"corridor", name:"Kherson → Mykolaiv",
+      note:"131,000 IDPs received in Mykolaiv Oblast." }},
+
+  { type:"Feature", geometry:{ type:"LineString", coordinates:[
+      [32.62,46.64],[30.72,46.48]
+    ]}, properties:{ kind:"corridor", name:"Kherson → Odesa",
+      note:"202,000 IDPs received in Odesa Oblast." }},
+
+  { type:"Feature", geometry:{ type:"LineString", coordinates:[
+      [35.17,47.83],[35.04,48.46]
+    ]}, properties:{ kind:"corridor", name:"Zaporizhia → Dnipropetrovsk",
+      note:"Northward corridor to major IDP-receiving city." }},
+
+  { type:"Feature", geometry:{ type:"LineString", coordinates:[
+      [31.30,51.50],[30.52,50.45]
+    ]}, properties:{ kind:"corridor", name:"Chernihiv → Kyiv",
+      note:"1,891 strikes. Corridor toward Kyiv City (370,000 IDPs received)." }},
+
+  // ── High-priority aid zones (Polygons) ──────────────────────────
+  // Areas where high strike density overlaps with high IDP concentration
+  // or absent IDP data (occupied territory). Illustrative delineations.
+  { type:"Feature", geometry:{ type:"Polygon", coordinates:[[
+      [37.5,47.0],[40.2,47.0],[40.2,49.8],[38.5,50.5],[37.0,50.2],[37.5,47.0]
+    ]]}, properties:{ kind:"zone", name:"Eastern Front Zone",
+      note:"Donetsk + Luhansk — highest strike density, no IDP data due to occupation. Critical overlap of strike intensity and untracked displacement." }},
+
+  { type:"Feature", geometry:{ type:"Polygon", coordinates:[[
+      [35.0,49.3],[38.0,49.3],[38.0,51.3],[35.2,51.4],[35.0,49.3]
+    ]]}, properties:{ kind:"zone", name:"Kharkiv Zone",
+      note:"4,845 strikes and 463,000 IDPs — simultaneously a major strike target and a displacement destination. Acute dual pressure on infrastructure." }},
+
+  { type:"Feature", geometry:{ type:"Polygon", coordinates:[[
+      [31.0,45.5],[37.5,45.5],[37.5,48.5],[35.5,48.8],[34.0,47.3],[31.0,47.5],[31.0,45.5]
+    ]]}, properties:{ kind:"zone", name:"Southern Zone",
+      note:"Kherson + Zaporizhia — heavily struck, Kakhovka dam destroyed, no IDP data available. Critical overlap of strike density and displacement." }},
+
+  { type:"Feature", geometry:{ type:"Polygon", coordinates:[[
+      [32.5,50.3],[36.5,50.3],[37.0,52.4],[33.0,52.4],[32.5,50.3]
+    ]]}, properties:{ kind:"zone", name:"Sumy Border Zone",
+      note:"8,539 strikes, directly on Russian border — highest per-oblast strike count. Critical overlap of strike density and displacement." }},
+
+  // ── Proposed medical / aid centers (Points) ─────────────────────
+  // Illustrative placements near boundaries between high-strike zones
+  // and IDP-receiving oblasts, on major transport corridors.
+  { type:"Feature", geometry:{ type:"Point", coordinates:[34.55,49.59]},
+    properties:{ kind:"medical", name:"Poltava",
+      note:"Gateway between Kharkiv/Sumy front and central Ukraine. Receives IDPs from two high-strike oblasts." }},
+
+  { type:"Feature", geometry:{ type:"Point", coordinates:[33.42,49.07]},
+    properties:{ kind:"medical", name:"Kremenchuk",
+      note:"Central transport hub at Dnipro river crossing. Strategic relay between eastern front and western Ukraine." }},
+
+  { type:"Feature", geometry:{ type:"Point", coordinates:[32.26,48.51]},
+    properties:{ kind:"medical", name:"Kropyvnytskyi",
+      note:"Central Ukraine crossroads — receives IDPs from south and east on converging highway routes." }},
+
+  { type:"Feature", geometry:{ type:"Point", coordinates:[30.22,48.75]},
+    properties:{ kind:"medical", name:"Uman",
+      note:"On the M12 highway between Kyiv and Odesa. Strategic relay point for southward IDP movement." }},
+
+  { type:"Feature", geometry:{ type:"Point", coordinates:[28.48,49.23]},
+    properties:{ kind:"medical", name:"Vinnytsia",
+      note:"Western relay point for IDPs moving toward EU borders. Key node on M12/M20 corridor." }},
+
+  { type:"Feature", geometry:{ type:"Point", coordinates:[26.99,49.42]},
+    properties:{ kind:"medical", name:"Khmelnytskyi",
+      note:"Staging point before Poland and Slovakia border crossings. Last major urban center on westward corridor." }},
+
+  { type:"Feature", geometry:{ type:"Point", coordinates:[26.25,50.62]},
+    properties:{ kind:"medical", name:"Rivne",
+      note:"Northwest corridor toward Dorohusk–Yahodyn crossing. Serves IDPs from Chernihiv and Kyiv oblasts moving west." }},
+
+  { type:"Feature", geometry:{ type:"Point", coordinates:[35.17,47.83]},
+    properties:{ kind:"medical", name:"Zaporizhzhia city",
+      note:"Government-controlled side of southern front. Frontline medical support for displacement from southern zone." }},
+]};
+
+// ══════════════════════════════════════════════════════════════════
 //  MAP LOAD — ADD ALL LAYERS
 // ══════════════════════════════════════════════════════════════════
 
@@ -738,10 +876,10 @@ map.on("load", () => {
           "fill-color": [
             "interpolate", ["linear"], ["get", "n"],
             0,    "rgba(14,18,24,0.15)",
-            50,   "rgba(80,100,130,0.28)",
-            500,  "rgba(180,130,50,0.38)",
-            2000, "rgba(232,163,61,0.48)",
-            8000, "rgba(201,68,68,0.55)"
+            50,   "rgba(60,80,110,0.25)",
+            500,  "rgba(130,110,60,0.35)",
+            2000, "rgba(155,130,80,0.45)",
+            8000, "rgba(140,70,70,0.52)"
           ],
           "fill-opacity": 1
         }
@@ -826,7 +964,7 @@ map.on("load", () => {
           "circle-color":        "rgba(245,240,230,0.85)",
           "circle-opacity":      0.90,
           "circle-stroke-width": 2,
-          "circle-stroke-color": "#e8a33d"
+          "circle-stroke-color": "#b89860"
         }
       }, "carto-labels");
 
@@ -870,6 +1008,95 @@ map.on("load", () => {
       }
     });
 
+  // ── HUMANITARIAN RESPONSE PLAN — inline, no fetch ─────────────────
+  map.addSource("hrp", { type: "geojson", data: HRP_DATA });
+
+  // Aid zones — semi-transparent red fill
+  map.addLayer({
+    id: "hrp-zones",
+    type: "fill",
+    source: "hrp",
+    filter: ["==", ["get", "kind"], "zone"],
+    layout: { visibility: "none" },
+    paint: {
+      "fill-color":   "rgba(160,55,55,0.11)",
+      "fill-opacity": 1
+    }
+  }, "carto-labels");
+
+  // Aid zones — dashed red border
+  map.addLayer({
+    id: "hrp-zones-line",
+    type: "line",
+    source: "hrp",
+    filter: ["==", ["get", "kind"], "zone"],
+    layout: { visibility: "none", "line-join": "round" },
+    paint: {
+      "line-color":      "rgba(180,75,75,0.50)",
+      "line-width":      1.5,
+      "line-dasharray":  [5, 3]
+    }
+  }, "carto-labels");
+
+  // Evacuation corridors — dashed amber lines
+  map.addLayer({
+    id: "hrp-corridors",
+    type: "line",
+    source: "hrp",
+    filter: ["==", ["get", "kind"], "corridor"],
+    layout: { visibility: "none", "line-join": "round", "line-cap": "round" },
+    paint: {
+      "line-color":      "#b89860",
+      "line-width":      2,
+      "line-opacity":    0.60,
+      "line-dasharray":  [5, 3]
+    }
+  }, "carto-labels");
+
+  // Proposed medical centers — pink circles
+  map.addLayer({
+    id: "hrp-medical",
+    type: "circle",
+    source: "hrp",
+    filter: ["==", ["get", "kind"], "medical"],
+    layout: { visibility: "none" },
+    paint: {
+      "circle-radius":       8,
+      "circle-color":        "#c06070",
+      "circle-opacity":      0.88,
+      "circle-stroke-width": 2,
+      "circle-stroke-color": "rgba(255,255,255,0.30)"
+    }
+  }, "carto-labels");
+
+  // HRP tooltip handler
+  function showHrpTooltip(e) {
+    const f = e.features[0];
+    if (!f) return;
+    const p = f.properties;
+    const wrapW = mapWrap.clientWidth;
+    const flip  = e.point.x > wrapW * 0.72;
+    tooltip.style.display = "block";
+    tooltip.style.left  = flip ? "auto" : (e.point.x + 14) + "px";
+    tooltip.style.right = flip ? (wrapW - e.point.x + 14) + "px" : "auto";
+    tooltip.style.top   = (e.point.y - 8) + "px";
+    const kindMeta = {
+      corridor: { label:"Proposed evacuation corridor", color:"#b89860" },
+      zone:     { label:"High-priority aid zone",       color:"#c05050" },
+      medical:  { label:"Proposed medical/aid center",  color:"#c06070" },
+    };
+    const km = kindMeta[p.kind] || { label: p.kind, color: "var(--dim)" };
+    tooltip.innerHTML =
+      `<div class="tt-date" style="color:${km.color}">${km.label}</div>` +
+      `<div class="tt-loc">${p.name}</div>` +
+      (p.note ? `<div class="tt-admin" style="color:var(--dim);margin-top:3px;line-height:1.45">${p.note}</div>` : "");
+  }
+
+  for (const lyr of ["hrp-corridors", "hrp-zones", "hrp-medical"]) {
+    map.on("mouseenter", lyr, e => { map.getCanvas().style.cursor = "crosshair"; showHrpTooltip(e); });
+    map.on("mouseleave", lyr, () => { map.getCanvas().style.cursor = ""; hideTooltip(); });
+  }
+
   // ── STRIKE LAYERS — loaded last, render on top ────────────────────
   fetch("strikes.geojson")
     .then(r => r.json())
@@ -888,10 +1115,10 @@ map.on("load", () => {
           "heatmap-color": [
             "interpolate",["linear"],["heatmap-density"],
             0,   "rgba(10,13,18,0)",
-            0.15,"rgba(80,100,130,0.4)",
-            0.45,"rgba(232,163,61,0.65)",
-            0.75,"rgba(201,68,68,0.82)",
-            1.0, "rgba(255,255,255,0.92)"
+            0.15,"rgba(35,45,75,0.45)",
+            0.45,"rgba(100,55,55,0.65)",
+            0.75,"rgba(130,80,60,0.80)",
+            1.0, "rgba(175,155,120,0.88)"
           ],
           "heatmap-radius":  ["interpolate",["linear"],["zoom"], 3,7, 7,20],
           "heatmap-opacity": ["interpolate",["linear"],["zoom"], 6,1.0, 8,0.0]
@@ -900,11 +1127,11 @@ map.on("load", () => {
 
       // Individual circles at zoom 5+ — color-coded by category
       const catColor = ["match", ["get","c"],
-        1, "#e8a33d",
-        2, "#c94444",
-        3, "#b86ea0",
-        4, "#5888b8",
-        "rgba(160,154,142,0.45)"
+        1, "#9a8560",
+        2, "#8a4444",
+        3, "#7a5a70",
+        4, "#5a7088",
+        "rgba(120,115,108,0.35)"
       ];
 
       map.addLayer({
