@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ukraine Crisis Map — Citations</title>
+<style>
+  :root {
+    --bg: #0a0d12;
+    --bg-panel: #0e1218;
+    --paper: #d8d2c6;
+    --dim: #877e72;
+    --rule-s: rgba(216,210,198,0.15);
+    --accent: #b89860;
+    --mono: "IBM Plex Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--bg); color: var(--paper); }
+  body { display: grid; grid-template-rows: 42px 1fr; font-family: var(--mono); }
+  header {
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--rule-s);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 18px;
+  }
+  .title { font-size: 11px; letter-spacing: 0.13em; text-transform: uppercase; }
+  .tabs { display: flex; gap: 8px; }
+  .tab {
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--dim);
+    text-decoration: none;
+    border: 1px solid var(--rule-s);
+    padding: 6px 8px;
+  }
+  .tab.active {
+    color: var(--paper);
+    border-color: var(--accent);
+    background: rgba(184,152,96,0.12);
+  }
+  main {
+    padding: 22px 24px 32px;
+    overflow-y: auto;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    max-width: 980px;
+    margin: 0 auto;
+  }
+  h1 {
+    font-size: 14px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--rule-s);
+  }
+  h2 {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--paper);
+    margin: 18px 0 8px;
+  }
+  p {
+    font-size: 11px;
+    line-height: 1.6;
+    color: var(--dim);
+    margin-bottom: 12px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--rule-s);
+    padding: 10px 12px;
+  }
+  .name-list {
+    background: rgba(255,255,255,0.015);
+    border: 1px solid var(--rule-s);
+    padding: 10px 12px;
+    margin-bottom: 14px;
+  }
+  .name-list p {
+    margin-bottom: 4px;
+    color: var(--paper);
+    background: none;
+    border: none;
+    padding: 0;
+  }
+  .name-list p:last-child { margin-bottom: 0; }
+  .after-contributors { margin-top: 16px; }
+</style>
+</head>
+<body>
+  <header>
+    <span class="title">Ukraine Crisis Map</span>
+    <nav class="tabs">
+      <a class="tab" href="index.html">Map</a>
+      <a class="tab active" href="citations.html">Citations</a>
+    </nav>
+  </header>
+  <main>
+    <h1>Sources and Limitations</h1>
+
+    <p>
+      Strike Data — ACLED (Armed Conflict Location &amp; Event Data Project).
+      38,564 Russian strike events downloaded from ACLED's Ukraine Conflict
+      Monitor, covering February 24, 2022 to april 16. Events were filtered to
+      Russian strikes and categorized by target type (energy, residential,
+      healthcare, education) using keyword matching against event descriptions.
+      Categorization is approximate since not all strike descriptions contained
+      necessary information. Strikes in occupied areas may be underreported due
+      to limited media access. acleddata.com
+    </p>
+
+    <p>
+      Displacement Data — IOM Displacement Tracking Matrix, Round 20 (April
+      2025). IDP and returnee estimates per oblast, downloaded from the UN
+      Humanitarian Data Exchange. All figures are exactly as published by IOM.
+      Donetsk, Luhansk, Kherson, and Zaporizhia oblasts have no IDP estimates
+      because IOM surveys cannot reach occupied or active combat zones.
+      data.humdata.org
+    </p>
+
+    <p>
+      Oblast Boundaries — Natural Earth Admin 1 (1:10m). Cartographic
+      approximations; may not reflect exact administrative borders.
+      naturalearthdata.com
+    </p>
+
+    <p>
+      Military Air Bases — Coordinates for 14 major Ukrainian airfields scraped
+      from individual Wikipedia articles using Claude; positions may be offset
+      by 0.5–2 km. Base selection prioritizes bases struck in the early days of
+      the invasion.
+    </p>
+
+    <p>
+      Border Crossings — Border crossing locations were identified by hand from
+      official border crossing lists and UNHCR-reported refugee routes.
+      Geographic coordinates were not provided by these sources and were
+      manually derived by locating each crossing point in OpenStreetMap and
+      Google Maps and getting latitude/longitude coordinates.
+    </p>
+
+    <p>
+      Proposed Humanitarian Response Plan — Evacuation corridor calculation, aid
+      zones, and medical center locations are proposed interventions, not real
+      facilities or official plans. Corridors were derived from where we saw
+      least strike density and IDP flow data. We marked aid zones in areas where
+      high strike counts overlap with IOM data gaps.
+    </p>
+
+    <p>
+      Basemap — CARTO Dark Matter tiles. Map rendering by MapLibre GL JS
+      (v4.7.1).
+    </p>
+
+    <h2>Contributors</h2>
+    <div class="name-list">
+      <p>Neil Dewan</p>
+      <p>Clara Wei</p>
+      <p>Yutaka Yamada</p>
+      <p>Natalie Ly</p>
+    </div>
+
+    <p class="after-contributors">
+      Built with the assistance of Claude for data processing, code editing, and
+      website design. All underlying data was sourced, verified, and downloaded
+      by the project team. All data is accurate to the best of our abilities and
+      we did not generate or fabricate any data.
+    </p>
+
+    <p>
+      In collaboration with Hitotsubashi University for the course in Special
+      Lectures: New Approaches to International Law and Relations, led by
+      Professor Sumie Nakaya.
+    </p>
+  </main>
+</body>
+</html>

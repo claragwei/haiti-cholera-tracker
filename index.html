@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>The War Comes Home — Russia's Strikes on Ukraine</title>
+<title>Ukraine Crisis Map</title>
 
 <link href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
@@ -42,7 +42,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 #app {
   display: grid;
   grid-template-rows: 42px 1fr;
-  grid-template-columns: 296px 1fr;
+  grid-template-columns: 296px 1fr 320px;
   height: 100vh;
 }
 
@@ -73,13 +73,44 @@ header {
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
+.h-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.h-tab {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dim);
+  text-decoration: none;
+  border: 1px solid var(--rule-s);
+  padding: 6px 8px;
+}
+.h-tab.active {
+  color: var(--paper);
+  border-color: var(--accent);
+  background: rgba(184,152,96,0.12);
+}
 
 /* ══════════════════════════════════════════════════════════════
    SIDEBAR
    ══════════════════════════════════════════════════════════════ */
 #sidebar {
+  grid-column: 1;
   background: var(--bg-panel);
   border-right: 1px solid var(--rule-s);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  scrollbar-width: thin;
+  scrollbar-color: var(--faint) transparent;
+}
+#sidebar-right {
+  grid-column: 3;
+  background: var(--bg-panel);
+  border-left: 1px solid var(--rule-s);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -114,10 +145,12 @@ h1 em { font-style: italic; color: var(--dim); font-weight: 300; }
 
 .sb-narrative {
   font-family: var(--sans);
-  font-size: 12.5px;
+  font-size: 11.2px;
   font-weight: 300;
   line-height: 1.7;
   color: var(--dim);
+  text-align: justify;
+  text-justify: inter-word;
 }
 
 /* ── Section wrapper ── */
@@ -237,10 +270,52 @@ h1 em { font-style: italic; color: var(--dim); font-weight: 300; }
   line-height: 1.9;
 }
 
+/* ── Long-form text label ── */
+.tab-label {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.18em;
+  color: var(--faint);
+  text-transform: uppercase;
+  margin-bottom: 7px;
+}
+.route-panel {
+  display: grid;
+  gap: 8px;
+}
+.route-help {
+  font-family: var(--sans);
+  font-size: 10.5px;
+  color: var(--dim);
+  line-height: 1.45;
+}
+.route-row {
+  display: flex;
+  gap: 7px;
+}
+.route-btn, .route-select {
+  border: 1px solid var(--rule-s);
+  background: transparent;
+  color: var(--paper);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  padding: 7px 8px;
+}
+.route-btn { cursor: pointer; }
+.route-btn:hover { border-color: var(--accent); color: var(--accent); }
+.route-status {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--faint);
+  line-height: 1.4;
+}
+
 /* ══════════════════════════════════════════════════════════════
    MAP AREA
    ══════════════════════════════════════════════════════════════ */
 #map-wrap {
+  grid-column: 2;
   position: relative;
   overflow: hidden;
 }
@@ -363,27 +438,64 @@ h1 em { font-style: italic; color: var(--dim); font-weight: 300; }
 
   <!-- ══ HEADER ══════════════════════════════════════════════════════ -->
   <header>
-    <span class="h-title">The War Comes Home</span>
-    <span class="h-meta">Russia's Strikes on Ukraine &nbsp;·&nbsp; 2022–2025</span>
+    <span class="h-title">Ukraine Crisis Map</span>
+    <span class="h-meta">Russian strikes and humanitarian planning overlays &nbsp;·&nbsp; Feb 2022–Apr 16, 2026</span>
+    <nav class="h-nav">
+      <a class="h-tab active" href="index.html">Map</a>
+      <a class="h-tab" href="citations.html">Citations</a>
+    </nav>
   </header>
 
   <!-- ══ SIDEBAR ═════════════════════════════════════════════════════ -->
   <aside id="sidebar">
 
     <div class="sb-intro">
-      <div class="sb-kicker">Feb 2022 — Present</div>
-      <h1>The War<br/>Comes <em>Home.</em></h1>
+      <div class="sb-kicker">Feb 2022 — Apr 16, 2026</div>
+      <h1>Ukraine<br/>Crisis <em>Map.</em></h1>
       <p class="sb-narrative">
-        Since February 2022, Russia has launched over 38,000 recorded strikes
-        across Ukraine. What began as a military campaign — targeting airfields,
-        bases, and supply lines — shifted into a systematic assault on civilian
-        life. Over 3.6 million people remain internally displaced. By mapping
-        where strikes concentrate and where displaced populations gather, we can
-        identify protection priorities and evacuation corridors that save lives.
-        Data: ACLED, IOM DTM Round 20, KSE Institute.
+        Russia's invasion of Ukraine has evolved from a territorial assault into
+        a campaign affecting civilians and daily life. As strike patterns shift
+        over time towards civilian infrastructure, understanding where and how
+        violence impacts populations becomes critical as Ukraine is increasingly
+        dependent on external support for recovery. Our Ukraine Crisis Map
+        transforms publicly available conflict data into a spatial tool designed
+        to support humanitarian analysis and strategic decision making in the
+        ongoing war. It maps over 38,000 recorded Russian strikes across Ukraine
+        from February 2022 to April 2026, integrating data from the Armed
+        Conflict Location &amp; Event Data Project (ACLED) and the International
+        Organization for Migration (IOM). We layer incidents of strikes (sized
+        by its fatality and colored by estimated target) and oblast level
+        density and displacement counts in order to show how strikes have
+        shifted. The sliding timeline allows humanitarian organizations, policy
+        analysts, and researchers to visualize the spread of violence
+        geographically. Beyond visualization, the platform provides a tool for
+        humanitarian workers to create spatial strategies for response, identify
+        priority evacuation corridors, high-need aid zones, and optimal
+        locations for medical and refugee infrastructure. Our goal is not only
+        to document the crisis, but to inform where resources, protection, and
+        intervention are most urgently needed.
       </p>
     </div>
 
+    <div class="sb-section">
+      <div class="tab-label">Solution Implementation</div>
+      <p class="sb-narrative" style="font-size:11.2px;line-height:1.55">
+        Our proposed solution for this crisis utilizes this visualization to establish a plan that proposes actionable humanitarian responses. First, we generated potential medical hubs sited at the intersections of displacement flows such as highways and in places that are geographically accessible: high IDP cities such as Lviv, Kyiv, and Dnipro, as well as conflict adjacent areas like Kharkiv and Zaporizhzhia. Second, shortest path evacuation corridors based on starting location and target location. Although we are limited on actual route information, our objective is to create a system that can give basic directional assistance to get to target sites. We generated the medical hubs on routes that avoid high density strike clusters and connect major roads. Lastly, we labeled known border crossings and zones where aid is most likely necessary due to proximity to frontline regions. Our main goal was to test how AI can be used to quickly create fast but effective tools with data alone that can help humanitarian aid and coordination efforts.
+      </p>
+    </div>
+
+    <div class="sb-footer">
+      <div class="sb-footer-text">
+        ACLED — Armed Conflict Location &amp; Event Data Project<br/>
+        IOM DTM — Displacement Tracking Matrix, Round 20<br/>
+        KSE Institute — Kyiv School of Economics, 2024<br/>
+        Boundaries — Natural Earth Admin 1
+      </div>
+    </div>
+
+  </aside><!-- #sidebar -->
+
+  <aside id="sidebar-right">
     <div class="sb-section">
       <div class="sb-section-head">Layers</div>
 
@@ -423,10 +535,9 @@ h1 em { font-style: italic; color: var(--dim); font-weight: 300; }
         <div class="layer-box" id="box-hrp"></div>
         <div>
           <div class="layer-name">Humanitarian Response Plan</div>
-          <div class="layer-desc">Proposed: evacuation corridors, high-priority aid zones, and medical center locations.</div>
+          <div class="layer-desc">Proposed: high-priority aid zones and medical center locations.</div>
         </div>
       </div>
-
     </div><!-- layers -->
 
     <div class="sb-section" id="legend-section">
@@ -436,16 +547,31 @@ h1 em { font-style: italic; color: var(--dim); font-weight: 300; }
       </div>
     </div>
 
-    <div class="sb-footer">
-      <div class="sb-footer-text">
-        ACLED — Armed Conflict Location &amp; Event Data Project<br/>
-        IOM DTM — Displacement Tracking Matrix, Round 20<br/>
-        KSE Institute — Kyiv School of Economics, 2024<br/>
-        Boundaries — Natural Earth Admin 1
+    <div class="sb-section">
+      <div class="sb-section-head">Local Route Planner</div>
+      <div class="route-panel">
+        <div class="route-help">
+          Click <strong>Set origin</strong>, then click map. Either set a
+          manual destination by map click or route to nearest border/medical node.
+        </div>
+        <div class="route-row">
+          <button class="route-btn" id="route-set-origin">Set origin</button>
+          <button class="route-btn" id="route-set-destination">Set destination</button>
+        </div>
+        <div class="route-row">
+          <select class="route-select" id="route-target-type">
+            <option value="border">Nearest border crossing</option>
+            <option value="medical">Nearest medical center</option>
+          </select>
+          <button class="route-btn" id="route-nearest">Route nearest</button>
+        </div>
+        <div class="route-row">
+          <button class="route-btn" id="route-clear">Clear route</button>
+        </div>
+        <div class="route-status" id="route-status">No origin selected.</div>
       </div>
     </div>
-
-  </aside><!-- #sidebar -->
+  </aside><!-- #sidebar-right -->
 
   <!-- ══ MAP ═════════════════════════════════════════════════════════ -->
   <div id="map-wrap">
@@ -461,7 +587,7 @@ h1 em { font-style: italic; color: var(--dim); font-weight: 300; }
       <div id="time-ends">
         <span>Feb 2022</span>
         <span id="strike-count">—</span>
-        <span>Today</span>
+        <span>Apr 16, 2026</span>
       </div>
     </div>
   </div><!-- #map-wrap -->
@@ -474,16 +600,19 @@ h1 em { font-style: italic; color: var(--dim); font-weight: 300; }
 // ══════════════════════════════════════════════════════════════════
 
 const START_DATE = "2022-02-24";
+const END_DATE   = "2026-04-16";
 const START_MS   = new Date(START_DATE).getTime();
+const END_MS     = new Date(END_DATE + "T23:59:59Z").getTime();
+let strikeDates = [];
 
 function fmtNum(n) { return n != null ? (+n).toLocaleString() : "—"; }
 
 const CAT = {
-  1: { label: "Energy / infrastructure", color: "#9a8560" },
-  2: { label: "Residential",             color: "#8a4444" },
-  3: { label: "Healthcare",              color: "#7a5a70" },
-  4: { label: "Education",               color: "#5a7088" },
-  5: { label: "Other / unclassified",    color: "rgba(120,115,108,0.35)" },
+  1: { label: "Energy / infrastructure", color: "#b79e72" },
+  2: { label: "Residential",             color: "#b45d5d" },
+  3: { label: "Healthcare",              color: "#9b7691" },
+  4: { label: "Education",               color: "#7892ac" },
+  5: { label: "Other / unclassified",    color: "rgba(150,144,136,0.55)" },
 };
 
 const SUB_LABEL = {
@@ -493,8 +622,7 @@ const SUB_LABEL = {
 };
 
 function isoFromSlider(pct) {
-  const totalDays = Math.ceil((Date.now() - START_MS) / 86400000);
-  const d = new Date(START_MS + (pct / 100) * totalDays * 86400000);
+  const d = new Date(START_MS + (pct / 100) * (END_MS - START_MS));
   return d.toISOString().slice(0, 10);
 }
 
@@ -502,6 +630,18 @@ function fmtDate(iso) {
   const [y, m, d] = iso.split("-");
   const MO = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   return `${MO[+m - 1]} ${+d}, ${y}`;
+}
+
+function countStrikesThrough(dateStr) {
+  if (!strikeDates.length) return 0;
+  let lo = 0;
+  let hi = strikeDates.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (strikeDates[mid] <= dateStr) lo = mid + 1;
+    else hi = mid;
+  }
+  return lo;
 }
 
 
@@ -556,13 +696,106 @@ map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-ri
 // ══════════════════════════════════════════════════════════════════
 
 const layerVis = { strikes: true, oblasts: false, idps: false, sites: false, hrp: false };
+let borderPoints = [];
+let localRoadGraph = null;
+
+const routeState = {
+  picking: null, // "origin" | "destination" | null
+  origin: null,
+  destination: null,
+};
+
+function coordKey(c) { return `${c[0].toFixed(5)},${c[1].toFixed(5)}`; }
+function sqDist(a, b) { const dx = a[0] - b[0]; const dy = a[1] - b[1]; return dx*dx + dy*dy; }
+function euclidKm(a, b) {
+  const x = (a[0] - b[0]) * 71.7;
+  const y = (a[1] - b[1]) * 111.0;
+  return Math.sqrt(x*x + y*y);
+}
+
+function buildRoadGraph(roadsGeojson) {
+  const nodes = [];
+  const nodeByKey = new Map();
+  const edges = [];
+  function getNodeIndex(coord) {
+    const key = coordKey(coord);
+    if (nodeByKey.has(key)) return nodeByKey.get(key);
+    const idx = nodes.length;
+    nodes.push(coord.slice());
+    edges.push([]);
+    nodeByKey.set(key, idx);
+    return idx;
+  }
+  for (const f of roadsGeojson.features) {
+    const coords = f.geometry.coordinates || [];
+    for (let i = 0; i < coords.length - 1; i++) {
+      const a = getNodeIndex(coords[i]);
+      const b = getNodeIndex(coords[i + 1]);
+      const w = euclidKm(coords[i], coords[i + 1]);
+      edges[a].push({ to: b, w });
+      edges[b].push({ to: a, w });
+    }
+  }
+  return { nodes, edges };
+}
+
+function nearestGraphNode(coord) {
+  let best = 0;
+  let bestD = Infinity;
+  for (let i = 0; i < localRoadGraph.nodes.length; i++) {
+    const d = sqDist(coord, localRoadGraph.nodes[i]);
+    if (d < bestD) { bestD = d; best = i; }
+  }
+  return best;
+}
+
+function dijkstraPath(startIdx, endIdx) {
+  const n = localRoadGraph.nodes.length;
+  const dist = new Array(n).fill(Infinity);
+  const prev = new Array(n).fill(-1);
+  const used = new Array(n).fill(false);
+  dist[startIdx] = 0;
+
+  for (let it = 0; it < n; it++) {
+    let v = -1;
+    let best = Infinity;
+    for (let i = 0; i < n; i++) {
+      if (!used[i] && dist[i] < best) { best = dist[i]; v = i; }
+    }
+    if (v < 0 || v === endIdx) break;
+    used[v] = true;
+    for (const e of localRoadGraph.edges[v]) {
+      const nd = dist[v] + e.w;
+      if (nd < dist[e.to]) {
+        dist[e.to] = nd;
+        prev[e.to] = v;
+      }
+    }
+  }
+
+  if (!isFinite(dist[endIdx])) return null;
+  const pathIdx = [];
+  let cur = endIdx;
+  while (cur !== -1) {
+    pathIdx.push(cur);
+    if (cur === startIdx) break;
+    cur = prev[cur];
+  }
+  pathIdx.reverse();
+  return pathIdx.map(i => localRoadGraph.nodes[i]);
+}
+
+function setRouteStatus(msg) {
+  const el = document.getElementById("route-status");
+  if (el) el.textContent = msg;
+}
 
 const GROUPS = {
   strikes: ["strikes-heat", "strikes-dots"],
   oblasts: ["oblasts-fill-strikes"],          // oblasts-line handled separately
   idps:    ["oblasts-fill-idps"],             // oblasts-line handled separately
   sites:   ["sites-airbases", "sites-borders"],
-  hrp:     ["hrp-corridors", "hrp-zones", "hrp-zones-line", "hrp-medical"],
+  hrp:     ["hrp-zones", "hrp-zones-line", "hrp-medical"],
 };
 
 function setGroupVis(group, visible) {
@@ -656,10 +889,6 @@ function updateLegend() {
     if (h) h += `<div class="legend-gap"></div>`;
     h += `<div class="legend-sub">Humanitarian Response Plan <span style="font-size:8px;letter-spacing:0;text-transform:none;color:rgba(184,152,96,0.6)">(proposed)</span></div>`;
     h += `<div class="legend-item">
-      <div style="width:22px;height:2px;flex-shrink:0;margin:3px 0;background:repeating-linear-gradient(to right,#b89860 0,#b89860 5px,transparent 5px,transparent 8px)"></div>
-      <span class="legend-label">Evacuation corridor</span>
-    </div>
-    <div class="legend-item">
       <div style="width:12px;height:9px;flex-shrink:0;background:rgba(160,55,55,0.2);border:1px dashed rgba(180,75,75,0.55)"></div>
       <span class="legend-label">High-priority aid zone</span>
     </div>
@@ -688,6 +917,8 @@ function applyTimeFilter() {
   const f = ["<=", ["get", "dt"], dateStr];
   if (map.getLayer("strikes-heat")) map.setFilter("strikes-heat", f);
   if (map.getLayer("strikes-dots")) map.setFilter("strikes-dots", f);
+  document.getElementById("strike-count").textContent =
+    countStrikesThrough(dateStr).toLocaleString() + " strikes";
   rafPending = false;
 }
 
@@ -741,54 +972,6 @@ function hideTooltip() { tooltip.style.display = "none"; }
 // ══════════════════════════════════════════════════════════════════
 
 const HRP_DATA = { type:"FeatureCollection", features:[
-
-  // ── Evacuation corridors (LineStrings) ──────────────────────────
-  // Grounded in real ACLED strike counts and IOM IDP data
-  { type:"Feature", geometry:{ type:"LineString", coordinates:[
-      [34.80,50.91],[34.55,49.59]
-    ]}, properties:{ kind:"corridor", name:"Sumy → Poltava",
-      note:"8,539 strikes in Sumy Oblast. Corridor toward 178,000-IDP receiving city." }},
-
-  { type:"Feature", geometry:{ type:"LineString", coordinates:[
-      [34.80,50.91],[30.52,50.45],[25.32,50.62],[23.73,51.47]
-    ]}, properties:{ kind:"corridor", name:"Sumy → Dorohusk–Yahodyn (Poland)",
-      note:"Westward corridor via Kyiv and Rivne to EU border crossing." }},
-
-  { type:"Feature", geometry:{ type:"LineString", coordinates:[
-      [37.56,48.74],[35.04,48.46]
-    ]}, properties:{ kind:"corridor", name:"Donetsk → Dnipropetrovsk",
-      note:"Corridor toward highest IDP-receiving oblast (588,000 IDPs)." }},
-
-  { type:"Feature", geometry:{ type:"LineString", coordinates:[
-      [36.23,49.99],[34.55,49.59]
-    ]}, properties:{ kind:"corridor", name:"Kharkiv → Poltava",
-      note:"4,845 strikes. Kharkiv is both a major source and destination of displacement." }},
-
-  { type:"Feature", geometry:{ type:"LineString", coordinates:[
-      [36.23,49.99],[35.04,48.46]
-    ]}, properties:{ kind:"corridor", name:"Kharkiv → Dnipropetrovsk",
-      note:"Secondary corridor south toward the highest IDP-receiving oblast." }},
-
-  { type:"Feature", geometry:{ type:"LineString", coordinates:[
-      [32.62,46.64],[31.99,46.97]
-    ]}, properties:{ kind:"corridor", name:"Kherson → Mykolaiv",
-      note:"131,000 IDPs received in Mykolaiv Oblast." }},
-
-  { type:"Feature", geometry:{ type:"LineString", coordinates:[
-      [32.62,46.64],[30.72,46.48]
-    ]}, properties:{ kind:"corridor", name:"Kherson → Odesa",
-      note:"202,000 IDPs received in Odesa Oblast." }},
-
-  { type:"Feature", geometry:{ type:"LineString", coordinates:[
-      [35.17,47.83],[35.04,48.46]
-    ]}, properties:{ kind:"corridor", name:"Zaporizhia → Dnipropetrovsk",
-      note:"Northward corridor to major IDP-receiving city." }},
-
-  { type:"Feature", geometry:{ type:"LineString", coordinates:[
-      [31.30,51.50],[30.52,50.45]
-    ]}, properties:{ kind:"corridor", name:"Chernihiv → Kyiv",
-      note:"1,891 strikes. Corridor toward Kyiv City (370,000 IDPs received)." }},
-
   // ── High-priority aid zones (Polygons) ──────────────────────────
   // Areas where high strike density overlaps with high IDP concentration
   // or absent IDP data (occupied territory). Illustrative delineations.
@@ -843,16 +1026,38 @@ const HRP_DATA = { type:"FeatureCollection", features:[
     properties:{ kind:"medical", name:"Rivne",
       note:"Northwest corridor toward Dorohusk–Yahodyn crossing. Serves IDPs from Chernihiv and Kyiv oblasts moving west." }},
 
-  { type:"Feature", geometry:{ type:"Point", coordinates:[35.17,47.83]},
-    properties:{ kind:"medical", name:"Zaporizhzhia city",
-      note:"Government-controlled side of southern front. Frontline medical support for displacement from southern zone." }},
+  { type:"Feature", geometry:{ type:"Point", coordinates:[35.04,48.46]},
+    properties:{ kind:"medical", name:"Dnipro",
+      note:"Relocated from Zaporizhzhia to Dnipro: larger logistics backbone and stronger rear-area treatment capacity." }},
 ]};
+
+// Local route network (major roads, approximate waypoints)
+const LOCAL_ROADS = {
+  type: "FeatureCollection",
+  features: [
+    { type:"Feature", geometry:{ type:"LineString", coordinates:[[30.52,50.45],[30.30,50.39],[29.23,50.75],[27.65,50.75],[26.25,50.62],[25.32,50.62],[23.73,51.47]] }}, // Kyiv→Yahodyn
+    { type:"Feature", geometry:{ type:"LineString", coordinates:[[30.52,50.45],[31.16,51.23],[31.30,51.50]] }}, // Kyiv→Chernihiv
+    { type:"Feature", geometry:{ type:"LineString", coordinates:[[30.52,50.45],[31.32,51.49],[33.37,50.75],[34.58,50.47],[34.80,50.91]] }}, // Kyiv→Sumy
+    { type:"Feature", geometry:{ type:"LineString", coordinates:[[30.52,50.45],[32.04,49.44],[34.55,49.59],[36.23,49.99]] }}, // Kyiv→Poltava→Kharkiv
+    { type:"Feature", geometry:{ type:"LineString", coordinates:[[34.55,49.59],[33.42,49.07],[35.04,48.46]] }}, // Poltava→Kremenchuk→Dnipro
+    { type:"Feature", geometry:{ type:"LineString", coordinates:[[35.04,48.46],[34.45,47.45],[32.62,46.64]] }}, // Dnipro→Kherson
+    { type:"Feature", geometry:{ type:"LineString", coordinates:[[32.62,46.64],[31.99,46.97],[30.72,46.48]] }}, // Kherson→Mykolaiv→Odesa
+    { type:"Feature", geometry:{ type:"LineString", coordinates:[[35.04,48.46],[36.37,48.53],[37.56,48.74]] }}, // Dnipro→Donetsk axis
+    { type:"Feature", geometry:{ type:"LineString", coordinates:[[35.04,48.46],[34.96,48.06],[34.10,47.15]] }}, // Dnipro→South belt
+    { type:"Feature", geometry:{ type:"LineString", coordinates:[[30.72,46.48],[30.22,48.75],[28.48,49.23],[26.99,49.42],[24.03,49.84],[23.10,49.79]] }}, // Odesa→West corridor
+    { type:"Feature", geometry:{ type:"LineString", coordinates:[[26.99,49.42],[26.25,50.62]] }}, // Khmelnytskyi→Rivne
+    { type:"Feature", geometry:{ type:"LineString", coordinates:[[32.26,48.51],[33.42,49.07],[30.22,48.75],[28.48,49.23]] }}, // Kropyvnytskyi spine
+    { type:"Feature", geometry:{ type:"LineString", coordinates:[[36.23,49.99],[35.46,48.57],[35.04,48.46]] }}, // Kharkiv→Dnipro
+    { type:"Feature", geometry:{ type:"LineString", coordinates:[[24.03,49.84],[22.79,49.27]] }}, // Lviv→Medyka axis
+  ]
+};
 
 // ══════════════════════════════════════════════════════════════════
 //  MAP LOAD — ADD ALL LAYERS
 // ══════════════════════════════════════════════════════════════════
 
 map.on("load", () => {
+  localRoadGraph = buildRoadGraph(LOCAL_ROADS);
 
   // Labels on top (added first so we can insert data layers below it)
   map.addLayer({
@@ -950,6 +1155,9 @@ map.on("load", () => {
   fetch("bases_and_crossings.geojson")
     .then(r => r.json())
     .then(data => {
+      borderPoints = data.features
+        .filter(f => f?.properties?.t === "border" && f?.geometry?.type === "Point")
+        .map(f => ({ name: f.properties.name || "Border crossing", coordinates: f.geometry.coordinates }));
       map.addSource("sites", { type: "geojson", data });
 
       // Air bases — white circle with amber ring
@@ -1008,6 +1216,141 @@ map.on("load", () => {
       }
     });
 
+  // ── LOCAL ROUTER (no external API) ───────────────────────────────
+  map.addSource("local-roads", { type: "geojson", data: LOCAL_ROADS });
+  map.addSource("route-line", { type: "geojson", data: { type:"FeatureCollection", features:[] } });
+  map.addSource("route-points", { type: "geojson", data: { type:"FeatureCollection", features:[] } });
+
+  map.addLayer({
+    id: "route-line",
+    type: "line",
+    source: "route-line",
+    paint: {
+      "line-color": "#73d0bf",
+      "line-width": 3.2,
+      "line-opacity": 0.9
+    }
+  }, "carto-labels");
+
+  map.addLayer({
+    id: "route-points",
+    type: "circle",
+    source: "route-points",
+    paint: {
+      "circle-radius": ["match", ["get","kind"], "origin", 6.5, 6.5],
+      "circle-color": ["match", ["get","kind"], "origin", "#4cc9a8", "#d7f7ef"],
+      "circle-stroke-width": 1.8,
+      "circle-stroke-color": "rgba(10,13,18,0.95)"
+    }
+  }, "carto-labels");
+
+  function refreshRoutePoints() {
+    const features = [];
+    if (routeState.origin) {
+      features.push({ type:"Feature", geometry:{type:"Point", coordinates: routeState.origin}, properties:{kind:"origin"} });
+    }
+    if (routeState.destination) {
+      features.push({ type:"Feature", geometry:{type:"Point", coordinates: routeState.destination}, properties:{kind:"destination"} });
+    }
+    map.getSource("route-points").setData({ type:"FeatureCollection", features });
+  }
+
+  function clearRouteLine() {
+    map.getSource("route-line").setData({ type:"FeatureCollection", features: [] });
+  }
+
+  function drawRoutePath(coords) {
+    map.getSource("route-line").setData({
+      type: "FeatureCollection",
+      features: [{ type:"Feature", geometry:{ type:"LineString", coordinates: coords }, properties:{} }]
+    });
+  }
+
+  function nearestTarget(type, fromCoord) {
+    const targetList = [];
+    if (type === "medical") {
+      for (const f of HRP_DATA.features) {
+        if (f?.properties?.kind === "medical" && f?.geometry?.type === "Point") {
+          targetList.push({ name: f.properties.name || "Medical center", coordinates: f.geometry.coordinates });
+        }
+      }
+    } else {
+      targetList.push(...borderPoints);
+    }
+    if (!targetList.length) return null;
+    let best = targetList[0];
+    let bestD = sqDist(fromCoord, best.coordinates);
+    for (let i = 1; i < targetList.length; i++) {
+      const d = sqDist(fromCoord, targetList[i].coordinates);
+      if (d < bestD) { bestD = d; best = targetList[i]; }
+    }
+    return best;
+  }
+
+  function computeAndDrawRoute() {
+    if (!routeState.origin || !routeState.destination) {
+      setRouteStatus("Set origin and destination first.");
+      return;
+    }
+    const s = nearestGraphNode(routeState.origin);
+    const t = nearestGraphNode(routeState.destination);
+    const route = dijkstraPath(s, t);
+    if (!route || route.length < 2) {
+      clearRouteLine();
+      setRouteStatus("No local route found on current road network.");
+      return;
+    }
+    drawRoutePath(route);
+    setRouteStatus(`Route drawn (${Math.round(route.length)} waypoints).`);
+  }
+
+  map.on("click", e => {
+    if (!routeState.picking) return;
+    const clicked = [e.lngLat.lng, e.lngLat.lat];
+    if (routeState.picking === "origin") {
+      routeState.origin = clicked;
+      refreshRoutePoints();
+      setRouteStatus("Origin set. Choose destination click or route nearest.");
+    } else if (routeState.picking === "destination") {
+      routeState.destination = clicked;
+      refreshRoutePoints();
+      computeAndDrawRoute();
+    }
+    routeState.picking = null;
+  });
+
+  document.getElementById("route-set-origin")?.addEventListener("click", () => {
+    routeState.picking = "origin";
+    setRouteStatus("Click map to place origin.");
+  });
+  document.getElementById("route-set-destination")?.addEventListener("click", () => {
+    routeState.picking = "destination";
+    setRouteStatus("Click map to place destination.");
+  });
+  document.getElementById("route-nearest")?.addEventListener("click", () => {
+    if (!routeState.origin) {
+      setRouteStatus("Set origin first.");
+      return;
+    }
+    const t = document.getElementById("route-target-type")?.value || "border";
+    const target = nearestTarget(t, routeState.origin);
+    if (!target) {
+      setRouteStatus("No target points available yet.");
+      return;
+    }
+    routeState.destination = target.coordinates.slice();
+    refreshRoutePoints();
+    computeAndDrawRoute();
+  });
+  document.getElementById("route-clear")?.addEventListener("click", () => {
+    routeState.picking = null;
+    routeState.origin = null;
+    routeState.destination = null;
+    refreshRoutePoints();
+    clearRouteLine();
+    setRouteStatus("Route cleared.");
+  });
+
   // ── HUMANITARIAN RESPONSE PLAN — inline, no fetch ─────────────────
   map.addSource("hrp", { type: "geojson", data: HRP_DATA });
 
@@ -1034,21 +1377,6 @@ map.on("load", () => {
     paint: {
       "line-color":      "rgba(180,75,75,0.50)",
       "line-width":      1.5,
-      "line-dasharray":  [5, 3]
-    }
-  }, "carto-labels");
-
-  // Evacuation corridors — dashed amber lines
-  map.addLayer({
-    id: "hrp-corridors",
-    type: "line",
-    source: "hrp",
-    filter: ["==", ["get", "kind"], "corridor"],
-    layout: { visibility: "none", "line-join": "round", "line-cap": "round" },
-    paint: {
-      "line-color":      "#b89860",
-      "line-width":      2,
-      "line-opacity":    0.60,
       "line-dasharray":  [5, 3]
     }
   }, "carto-labels");
@@ -1081,7 +1409,6 @@ map.on("load", () => {
     tooltip.style.right = flip ? (wrapW - e.point.x + 14) + "px" : "auto";
     tooltip.style.top   = (e.point.y - 8) + "px";
     const kindMeta = {
-      corridor: { label:"Proposed evacuation corridor", color:"#b89860" },
       zone:     { label:"High-priority aid zone",       color:"#c05050" },
       medical:  { label:"Proposed medical/aid center",  color:"#c06070" },
     };
@@ -1092,7 +1419,7 @@ map.on("load", () => {
       (p.note ? `<div class="tt-admin" style="color:var(--dim);margin-top:3px;line-height:1.45">${p.note}</div>` : "");
   }
 
-  for (const lyr of ["hrp-corridors", "hrp-zones", "hrp-medical"]) {
+  for (const lyr of ["hrp-zones", "hrp-medical"]) {
     map.on("mouseenter", lyr, e => { map.getCanvas().style.cursor = "crosshair"; showHrpTooltip(e); });
     map.on("mouseleave", lyr, () => { map.getCanvas().style.cursor = ""; hideTooltip(); });
   }
@@ -1127,11 +1454,11 @@ map.on("load", () => {
 
       // Individual circles at zoom 5+ — color-coded by category
       const catColor = ["match", ["get","c"],
-        1, "#9a8560",
-        2, "#8a4444",
-        3, "#7a5a70",
-        4, "#5a7088",
-        "rgba(120,115,108,0.35)"
+        1, "#b79e72",
+        2, "#b45d5d",
+        3, "#9b7691",
+        4, "#7892ac",
+        "rgba(150,144,136,0.55)"
       ];
 
       map.addLayer({
@@ -1147,7 +1474,7 @@ map.on("load", () => {
           ],
           "circle-color":        catColor,
           "circle-opacity": [
-            "interpolate",["linear"],["zoom"], 5,0, 6,0.75
+            "interpolate",["linear"],["zoom"], 5,0, 6,0.9
           ],
           "circle-stroke-width": 0.4,
           "circle-stroke-color": "rgba(255,255,255,0.10)"
@@ -1156,9 +1483,13 @@ map.on("load", () => {
 
       // Time slider init
       slider.value = 100;
-      timeDateEl.textContent = fmtDate(new Date().toISOString().slice(0,10));
+      timeDateEl.textContent = fmtDate(END_DATE);
+      strikeDates = data.features
+        .map(f => f?.properties?.dt)
+        .filter(Boolean)
+        .sort();
       document.getElementById("strike-count").textContent =
-        data.features.length.toLocaleString() + " strikes";
+        countStrikesThrough(END_DATE).toLocaleString() + " strikes";
 
       // Hover tooltip
       map.on("mousemove",  "strikes-dots", e => {
@@ -1171,6 +1502,7 @@ map.on("load", () => {
       });
 
       updateLegend();
+
     })
     .catch(err => {
       console.error("Failed to load strikes.geojson:", err);
