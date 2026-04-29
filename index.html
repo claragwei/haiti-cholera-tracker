@@ -902,16 +902,6 @@ function setRouteStatus(msg) {
 }
 
 function initSemanticNodes() {
-  const cityNodes = [
-    { name: "Kyiv", coordinates: [30.523, 50.450], kind: "city" },
-    { name: "Lviv", coordinates: [24.031, 49.842], kind: "city" },
-    { name: "Dnipro", coordinates: [35.046, 48.464], kind: "city" },
-    { name: "Kharkiv", coordinates: [36.230, 49.993], kind: "city" },
-    { name: "Poltava", coordinates: [34.551, 49.588], kind: "city" },
-    { name: "Odesa", coordinates: [30.732, 46.482], kind: "city" },
-    { name: "Mykolaiv", coordinates: [31.994, 46.975], kind: "city" },
-    { name: "Rivne", coordinates: [26.251, 50.619], kind: "city" },
-  ];
   const medicalNodes = HRP_DATA.features
     .filter(f => f?.properties?.kind === "medical" && f?.geometry?.type === "Point")
     .map(f => ({
@@ -924,11 +914,7 @@ function initSemanticNodes() {
     coordinates: b.coordinates,
     kind: "border"
   }));
-  const all = [...cityNodes, ...medicalNodes, ...borderNodes];
-  semanticNodes = all.map(n => ({
-    ...n,
-    graphIdx: nearestGraphNode(n.coordinates)
-  }));
+  semanticNodes = [...medicalNodes, ...borderNodes];
 }
 
 function nearestSemanticByGraphDistance(type, fromCoord) {
@@ -1459,58 +1445,45 @@ map.on("load", () => {
     });
   }
 
-  function computeAndDrawRoute() {
+  async function computeAndDrawRoute() {
     if (!routeState.origin || !routeState.destination) {
       setRouteStatus("Set origin and destination first.");
       return;
     }
-    const s = nearestGraphNode(routeState.origin);
-    const t = nearestGraphNode(routeState.destination);
-    let route = dijkstraPath(s, t);
-    if (routeState.destinationKind === "border") {
-      // Strictly prevent border routes from traversing medical hub nodes.
-      const blockedMedicalIdx = new Set(
-        semanticNodes
-          .filter(n => n.kind === "medical")
-          .map(n => n.graphIdx)
-      );
-      blockedMedicalIdx.delete(s);
-      blockedMedicalIdx.delete(t);
-      route = dijkstraPath(s, t, { blockedNodes: blockedMedicalIdx });
-      if (!route) {
-        // Fallback: allow medical nodes but heavily penalize them.
-        route = dijkstraPath(s, t, { penaltyNodes: blockedMedicalIdx, penaltyKm: 120 });
-      }
-    }
-    if (!route || route.coords.length < 2) {
-      // Final fallback: direct connector so the user still gets guidance.
+    setRouteStatus("Routing…");
+    clearRouteLine();
+
+    const [oLon, oLat] = routeState.origin;
+    const [dLon, dLat] = routeState.destination;
+
+    try {
+      const url = `https://router.project-osrm.org/route/v1/driving/` +
+        `${oLon},${oLat};${dLon},${dLat}?overview=full&geometries=geojson`;
+      const resp = await fetch(url, { signal: AbortSignal.timeout(9000) });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const json = await resp.json();
+      if (json.code !== "Ok" || !json.routes?.length) throw new Error(json.code || "No route");
+
+      const route  = json.routes[0];
+      const coords = route.geometry.coordinates;
+      const distKm = (route.distance / 1000).toFixed(1);
+      const durMin = Math.round(route.duration / 60);
+      const h = Math.floor(durMin / 60);
+      const m = durMin % 60;
+      const durStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
+      const dstStr = routeState.destinationName ? ` → ${routeState.destinationName}` : "";
+
+      drawRoutePath(coords);
+      setRouteStatus(`${distKm} km · ~${durStr} by road${dstStr}`);
+
+    } catch (err) {
+      console.warn("OSRM routing failed:", err);
+      // Straight-line fallback
       drawRoutePath([routeState.origin.slice(), routeState.destination.slice()]);
-      const dstTxt = routeState.destinationName
-        ? ` target: ${routeState.destinationKind || "point"} (${routeState.destinationName}).`
-        : "";
-      setRouteStatus(`No connected road path found; drawing direct connector.${dstTxt}`);
-      return;
+      const d = euclidKm(routeState.origin, routeState.destination).toFixed(1);
+      const dstStr = routeState.destinationName ? ` → ${routeState.destinationName}` : "";
+      setRouteStatus(`Road routing unavailable — direct line ~${d} km${dstStr}`);
     }
-    const routed = route.coords.slice();
-    if (routeState.origin && routed.length) {
-      const first = routed[0];
-      if (sqDist(routeState.origin, first) > 1e-10) routed.unshift(routeState.origin.slice());
-    }
-    if (routeState.destination && routed.length) {
-      const last = routed[routed.length - 1];
-      if (sqDist(routeState.destination, last) > 1e-10) routed.push(routeState.destination.slice());
-    }
-    drawRoutePath(routed);
-    const hops = semanticHopsFromPath(route.indices)
-      .filter(h => routeState.destinationKind !== "border" || h.kind !== "medical")
-      .map(h => h.name)
-      .slice(0, 6)
-      .join(" -> ");
-    const hopTxt = hops ? ` | hops: ${hops}` : "";
-    const dstTxt = routeState.destinationName
-      ? ` target: ${routeState.destinationKind || "point"} (${routeState.destinationName}).`
-      : "";
-    setRouteStatus(`Route drawn (${route.distanceKm.toFixed(1)} km).${dstTxt}${hopTxt}`);
   }
 
   map.on("click", e => {
@@ -1548,8 +1521,7 @@ map.on("load", () => {
       return;
     }
     const t = document.getElementById("route-target-type")?.value === "medical" ? "medical" : "border";
-    const target = nearestSemanticByGraphDistance(t, routeState.origin);
-    const fallbackTarget = target || nearestSemanticByEuclidean(t, routeState.origin);
+    const fallbackTarget = nearestSemanticByEuclidean(t, routeState.origin);
     if (!fallbackTarget) {
       routeState.destination = null;
       routeState.destinationKind = null;
